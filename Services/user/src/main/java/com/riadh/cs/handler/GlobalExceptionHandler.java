@@ -3,7 +3,6 @@ package com.riadh.cs.handler;
 import com.riadh.cs.exception.InvalidTokenException;
 import com.riadh.cs.exception.KeycloakException;
 import com.riadh.cs.exception.UserNotFoundException;
-import com.riadh.cs.exception.UserNotfoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +22,7 @@ import static org.springframework.http.HttpStatus.*;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({UserNotfoundException.class, UserNotFoundException.class})
+    @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleUserNotFoundException(RuntimeException exception) {
         log.error("User not found: {}", exception.getMessage());
         return ResponseEntity

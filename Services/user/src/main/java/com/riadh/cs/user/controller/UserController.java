@@ -2,7 +2,10 @@ package com.riadh.cs.user.controller;
 
 import com.riadh.cs.user.dto.UserResponse;
 import com.riadh.cs.user.dto.UserUpdateRequest;
+import com.riadh.cs.user.entity.User;
 import com.riadh.cs.user.service.UserService;
+import com.riadh.cs.user.service.UserSyncService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,12 +24,39 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final UserSyncService userSyncService;
 
     @GetMapping("/profile")
-    public ResponseEntity<UserResponse> getProfile(@AuthenticationPrincipal Jwt jwt) {
-        String keycloakId = jwt.getSubject();
-        UserResponse response = userService.getUserByKeycloakId(keycloakId);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<UserResponse> getProfile(
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest httpRequest) {
+        
+        try {
+            log.info("=== Getting user profile ===");
+            
+            // Auto-sync user from Keycloak if not exists in PostgreSQL
+            String ipAddress = getClientIpAddress(httpRequest);
+            String userAgent = httpRequest.getHeader("User-Agent");
+            
+            log.info("Syncing user from Keycloak...");
+            User user = userSyncService.syncUserFromKeycloak(jwt, ipAddress, userAgent);
+            log.info("User synced: id={}, email={}", user.getId(), user.getEmail());
+            
+            // Update last login
+            log.info("Updating last login...");
+            userSyncService.updateLastLogin(user.getKeycloakId());
+            log.info("Last login updated");
+            
+            // Return user profile
+            log.info("Building user response...");
+            UserResponse response = userService.getUserByKeycloakId(user.getKeycloakId());
+            log.info("User response ready");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error getting user profile: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to get user profile: " + e.getMessage(), e);
+        }
     }
 
     @PutMapping("/profile")
@@ -100,6 +130,14 @@ public class UserController {
     public ResponseEntity<Void> deactivateUser(@PathVariable Long userId) {
         userService.deactivateUser(userId);
         return ResponseEntity.ok().build();
+    }
+
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }
 

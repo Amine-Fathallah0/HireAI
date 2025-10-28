@@ -40,7 +40,7 @@ keycloak:
   realm: ${KEYCLOAK_REALM:resume-platform}
   resource: ${KEYCLOAK_CLIENT_ID:user-service}
   credentials:
-    secret: ${KEYCLOAK_CLIENT_SECRET:your-client-secret}
+    secret: ${KEYCLOAK_CLIENT_SECRET:bWumC1b38BfV4n00QlNskAduOgq3eYG9}
   
   # Keycloak Admin Configuration
   admin-realm: ${KEYCLOAK_ADMIN_REALM:master}
