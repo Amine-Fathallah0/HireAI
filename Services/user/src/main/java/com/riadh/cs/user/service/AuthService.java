@@ -48,49 +48,96 @@ public class AuthService {
     @Value("${keycloak.credentials.secret}")
     private String clientSecret;
 
-    @Transactional
     public AuthResponse register(RegisterRequest request, String ipAddress, String userAgent) {
         // 1. Check if user already exists
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("User with this email already exists");
         }
 
-        // 2. Create user in Keycloak
-        String keycloakId = keycloakAdminService.createUser(
-                request.getEmail(),
-                request.getPassword(),
-                request.getFirstName(),
-                request.getLastName()
-        );
+        String keycloakId = null;
+        User user = null;
+        
+        try {
+            // 2. Create user in Keycloak FIRST (outside transaction)
+            keycloakId = keycloakAdminService.createUser(
+                    request.getEmail(),
+                    request.getPassword(),
+                    request.getFirstName(),
+                    request.getLastName()
+            );
+            log.info("User created in Keycloak: {}", keycloakId);
 
-        // 3. Create user in local database
-        User user = User.builder()
-                .email(request.getEmail())
-                .keycloakId(keycloakId)
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .phoneNumber(request.getPhoneNumber())
-                .city(request.getCity())
-                .country(request.getCountry())
-                .emailVerified(false)
-                .isActive(true)
-                .role("user")
-                .consentAiProcessing(request.getConsentAiProcessing())
-                .termsAcceptedAt(Instant.now())
-                .build();
+            // 3. Create user in local database (inside transaction)
+            user = saveUserToDatabase(request, keycloakId);
 
-        user = userRepository.save(user);
+            // 4. Send verification email (via Keycloak) - non-blocking
+            try {
+                keycloakAdminService.sendVerificationEmail(keycloakId);
+                log.info("Verification email sent successfully to: {}", request.getEmail());
+            } catch (Exception e) {
+                log.warn("Failed to send verification email (SMTP not configured): {}", e.getMessage());
+                // Continue registration even if email fails
+            }
 
-        // 4. Send verification email (via Keycloak)
-        keycloakAdminService.sendVerificationEmail(keycloakId);
+            // 5. Log audit
+            auditService.logAction(user.getId(), "REGISTER", "user", user.getId(),
+                    ipAddress, userAgent, "success", null);
 
-        // 5. Log audit
-        auditService.logAction(user.getId(), "REGISTER", "user", user.getId(),
-                ipAddress, userAgent, "success", null);
+            // 6. Return success response (user will manually sign in)
+            log.info("User registered successfully: email={}, keycloakId={}", request.getEmail(), keycloakId);
+            
+            return AuthResponse.builder()
+                    .success(true)
+                    .message("Registration successful. Please check your email for verification.")
+                    .userId(user.getId())
+                    .keycloakId(keycloakId)
+                    .build();
 
-        // 6. Auto-login after registration
-        return login(new AuthRequest(request.getEmail(), request.getPassword()),
-                ipAddress, userAgent);
+        } catch (Exception e) {
+            log.error("Registration failed: {}", e.getMessage(), e);
+            
+            // COMPENSATION: Clean up Keycloak user if database save failed
+            if (keycloakId != null && user == null) {
+                try {
+                    log.info("Cleaning up orphaned Keycloak user: {}", keycloakId);
+                    keycloakAdminService.deleteUser(keycloakId);
+                    log.info("Successfully cleaned up orphaned Keycloak user: {}", keycloakId);
+                } catch (Exception cleanupEx) {
+                    log.error("Failed to clean up orphaned Keycloak user: {}", keycloakId, cleanupEx);
+                    // Log for manual cleanup - don't fail the original error
+                }
+            }
+            
+            throw new RuntimeException("Registration failed: " + e.getMessage(), e);
+        }
+    }
+
+    @Transactional
+    private User saveUserToDatabase(RegisterRequest request, String keycloakId) {
+        try {
+            User user = User.builder()
+                    .email(request.getEmail())
+                    .keycloakId(keycloakId)
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .phoneNumber(request.getPhoneNumber())
+                    .city(request.getCity())
+                    .country(request.getCountry())
+                    .emailVerified(false)
+                    .isActive(true)
+                    .role("user")
+                    .consentAiProcessing(request.getConsentAiProcessing())
+                    .termsAcceptedAt(Instant.now())
+                    .build();
+
+            user = userRepository.save(user);
+            log.info("User saved to database: {}", user.getId());
+            return user;
+            
+        } catch (Exception e) {
+            log.error("Failed to save user to database: {}", e.getMessage(), e);
+            throw e; // Re-throw to trigger compensation
+        }
     }
 
     @Transactional
