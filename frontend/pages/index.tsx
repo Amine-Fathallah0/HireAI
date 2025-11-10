@@ -5,9 +5,11 @@ import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { ArrowRight, Zap, Brain, BarChart3, Users, Sparkles } from 'lucide-react';
+import { ArrowRight, Zap, Brain, BarChart3, Users, Sparkles, Menu, X, ChevronDown, ChevronUp, Shield, Lock, CheckCircle2, Upload, Wand2, Briefcase, FileCheck, HeadphonesIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PixelatedCanvas } from '@/components/ui/pixelated-canvas';
+import { FeaturesSection } from '@/components/ui/features-section';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 interface UserProfile {
   id: number;
@@ -25,9 +27,24 @@ interface UserProfile {
 // Landing Page Component (shown when not authenticated)
 function LandingPage() {
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const handleSignInClick = () => {
     router.push('/auth/signin');
+  };
+
+  // Scroll to top functionality
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -43,21 +60,60 @@ function LandingPage() {
             </div>
             <span className="font-bold text-lg text-foreground">HireAI</span>
           </div>
+          
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
+            <a href="#how-it-works" className="text-sm text-black/60 hover:text-black transition">
+              How It Works
+            </a>
             <a href="#features" className="text-sm text-black/60 hover:text-black transition">
               Features
             </a>
-            <a href="#stats" className="text-sm text-black/60 hover:text-black transition">
-              Impact
+            <a href="#testimonials" className="text-sm text-black/60 hover:text-black transition">
+              Reviews
             </a>
-            <a href="#cta" className="text-sm text-black/60 hover:text-black transition">
-              Pricing
+            <a href="#faq" className="text-sm text-black/60 hover:text-black transition">
+              FAQ
             </a>
           </div>
-          <Button size="sm" className="bg-primary hover:bg-primary/90 text-white" onClick={handleSignInClick}>
-            Sign In
-          </Button>
+
+          <div className="flex items-center gap-3">
+            <Button size="sm" className="hidden md:inline-flex bg-primary hover:bg-primary/90 text-white" onClick={handleSignInClick}>
+              Sign In
+            </Button>
+            
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-black/5 transition"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-black/5 bg-white">
+            <div className="px-4 py-4 space-y-3">
+              <a href="#how-it-works" className="block py-2 text-sm text-black/60 hover:text-black transition" onClick={() => setMobileMenuOpen(false)}>
+                How It Works
+              </a>
+              <a href="#features" className="block py-2 text-sm text-black/60 hover:text-black transition" onClick={() => setMobileMenuOpen(false)}>
+                Features
+              </a>
+              <a href="#testimonials" className="block py-2 text-sm text-black/60 hover:text-black transition" onClick={() => setMobileMenuOpen(false)}>
+                Reviews
+              </a>
+              <a href="#faq" className="block py-2 text-sm text-black/60 hover:text-black transition" onClick={() => setMobileMenuOpen(false)}>
+                FAQ
+              </a>
+              <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-white" onClick={handleSignInClick}>
+                Sign In
+              </Button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -112,24 +168,129 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 relative z-10 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-white pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-medium">
+              <Sparkles className="w-4 h-4" />
+              Simple Process
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-bold text-black">How It Works</h2>
+            <p className="text-lg text-black/60 max-w-2xl mx-auto">
+              Get started in minutes and land your dream job in 3 simple steps
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 relative">
+            {[
+              {
+                step: '01',
+                title: 'Upload Your Resume',
+                desc: 'Simply upload your existing resume or start from scratch with our templates.',
+                icon: Upload,
+              },
+              {
+                step: '02',
+                title: 'AI Enhancement',
+                desc: 'Our AI analyzes and enhances your resume with tailored suggestions for your target role.',
+                icon: Wand2,
+              },
+              {
+                step: '03',
+                title: 'Get Matched',
+                desc: 'Receive job matches and track your applications all in one place.',
+                icon: Briefcase,
+              },
+            ].map((item, i) => {
+              const Icon = item.icon;
+              const isMiddle = i === 1;
+              return (
+                <div key={i} className="relative group">
+                  {/* Connection Arrow (Desktop) */}
+                  {i < 2 && (
+                    <div className="hidden md:block absolute top-12 -right-4 z-10">
+                      <ArrowRight className="w-8 h-8 text-primary/30 group-hover:text-primary/50 transition-colors" />
+                    </div>
+                  )}
+
+                  <div className={`relative bg-white rounded-3xl p-8 border-2 transition-all duration-500 h-full ${
+                    isMiddle 
+                      ? 'border-primary shadow-lg md:scale-105 md:-translate-y-2' 
+                      : 'border-black/5 hover:border-primary/30 hover:shadow-lg hover:scale-105'
+                  }`}>
+                    {/* Gradient Background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    {/* Step Number Badge */}
+                    <div className={`absolute -top-5 -right-5 w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg rotate-12 group-hover:rotate-0 transition-transform duration-500 ${
+                      isMiddle ? 'bg-primary' : 'bg-gradient-to-br from-primary to-primary/80'
+                    }`}>
+                      {item.step}
+                    </div>
+
+                    {/* Icon Container */}
+                    <div className="relative mb-6 inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all duration-500">
+                      <Icon className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="relative">
+                      <h3 className="text-xl font-bold text-black mb-3 group-hover:text-primary transition-colors duration-300">
+                        {item.title}
+                      </h3>
+                      <p className="text-black/60 leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
+
+                    {/* Decorative Corner Element */}
+                    <div className="absolute bottom-4 right-4 w-12 h-12 border-2 border-primary/10 rounded-tl-3xl group-hover:border-primary/30 transition-colors duration-500" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section id="stats" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-black/5 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="space-y-2 text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-primary">85%</div>
+              <AnimatedCounter
+                value={85}
+                suffix="%"
+                className="text-3xl sm:text-4xl font-bold text-primary"
+              />
               <p className="text-sm text-black/60">Interview success rate</p>
             </div>
             <div className="space-y-2 text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-primary">10K+</div>
+              <AnimatedCounter
+                value={10}
+                suffix="K+"
+                className="text-3xl sm:text-4xl font-bold text-primary"
+              />
               <p className="text-sm text-black/60">Resumes enhanced</p>
             </div>
             <div className="space-y-2 text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-primary">98%</div>
+              <AnimatedCounter
+                value={98}
+                suffix="%"
+                className="text-3xl sm:text-4xl font-bold text-primary"
+              />
               <p className="text-sm text-black/60">ATS compatibility</p>
             </div>
             <div className="space-y-2 text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-primary">5K+</div>
+              <AnimatedCounter
+                value={5}
+                suffix="K+"
+                className="text-3xl sm:text-4xl font-bold text-primary"
+              />
               <p className="text-sm text-black/60">Students helped</p>
             </div>
           </div>
@@ -234,6 +395,168 @@ function LandingPage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50/50 to-white relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-medium">
+              <Sparkles className="w-4 h-4" />
+              Success Stories
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-bold text-black">Loved by Job Seekers</h2>
+            <p className="text-lg text-black/60 max-w-2xl mx-auto">
+              See how HireAI helped thousands land their dream jobs
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: 'Sarah Chen',
+                role: 'Software Engineer',
+                company: 'Google',
+                image: '👩‍💻',
+                text: 'HireAI transformed my resume and I landed 5 interviews in one week! The AI suggestions were spot-on and tailored perfectly to each job.',
+                rating: 5,
+              },
+              {
+                name: 'Marcus Johnson',
+                role: 'Product Designer',
+                company: 'Airbnb',
+                image: '👨‍🎨',
+                text: 'I was struggling to get responses. After using HireAI, my interview rate went from 5% to 40%. Game changer!',
+                rating: 5,
+              },
+              {
+                name: 'Priya Patel',
+                role: 'Data Analyst',
+                company: 'Microsoft',
+                image: '👩‍💼',
+                text: 'The AI matched me with roles I never considered but turned out to be perfect fits. Got my dream job in 3 weeks!',
+                rating: 5,
+              },
+            ].map((testimonial, i) => (
+              <div key={i} className="bg-white rounded-2xl p-8 border border-black/5 hover:shadow-lg transition-all duration-300">
+                {/* Rating Stars */}
+                <div className="flex gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                    </svg>
+                  ))}
+                </div>
+
+                {/* Testimonial Text */}
+                <p className="text-black/70 leading-relaxed mb-6 italic">
+                  &ldquo;{testimonial.text}&rdquo;
+                </p>
+
+                {/* User Info */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-2xl">
+                    {testimonial.image}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-black">{testimonial.name}</div>
+                    <div className="text-sm text-black/60">
+                      {testimonial.role} at {testimonial.company}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Trust & Benefits - Modern Grid */}
+          <div className="mt-20">
+            <p className="text-center text-sm text-black/40 mb-12 uppercase tracking-wider font-medium">
+              Trusted & Secure
+            </p>
+            <FeaturesSection
+              features={[
+                {
+                  title: 'Enterprise Security',
+                  description: 'SOC 2 certified with bank-level 256-bit encryption. Your data is always protected.',
+                  icon: <Shield className="w-7 h-7" />,
+                },
+                {
+                  title: 'GDPR Compliant',
+                  description: 'Full compliance with data protection regulations. You own and control your data.',
+                  icon: <Lock className="w-7 h-7" />,
+                },
+                {
+                  title: 'ATS Optimized',
+                  description: 'Every resume passes Applicant Tracking Systems with optimized formatting.',
+                  icon: <FileCheck className="w-7 h-7" />,
+                },
+                {
+                  title: '24/7 Support',
+                  description: 'Our team is available around the clock via chat, email, or phone.',
+                  icon: <HeadphonesIcon className="w-7 h-7" />,
+                },
+              ]}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-medium">
+              <Sparkles className="w-4 h-4" />
+              Got Questions?
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-bold text-black">Frequently Asked Questions</h2>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              {
+                q: 'How does the AI resume customization work?',
+                a: 'Our AI analyzes job descriptions and your resume, then tailors your experience, skills, and achievements to match what employers are looking for. It optimizes keywords, formats, and content structure to maximize ATS compatibility and recruiter appeal.',
+              },
+              {
+                q: 'Is my data secure and private?',
+                a: 'Absolutely. We use bank-level 256-bit encryption, are SOC 2 certified, and fully GDPR compliant. Your resume data is never shared with third parties, and you maintain full control over your information.',
+              },
+              {
+                q: 'How much does HireAI cost?',
+                a: 'We offer a free tier for students with basic features. Premium plans start at $9.99/month with unlimited customizations, advanced AI features, and priority support.',
+              },
+              {
+                q: 'Can I use HireAI for multiple job applications?',
+                a: 'Yes! You can customize your resume for unlimited job applications. Each customization is saved, so you can track which version was sent where.',
+              },
+              {
+                q: 'Does it work with Applicant Tracking Systems (ATS)?',
+                a: 'Yes, all our resumes are ATS-optimized. We use industry-standard formats, proper keyword placement, and clean formatting to ensure your resume passes ATS screening.',
+              },
+              {
+                q: 'What if I need help?',
+                a: 'Our support team is available 24/7 via chat, email, or phone. Premium users get priority support with response times under 2 hours.',
+              },
+            ].map((faq, i) => (
+              <details
+                key={i}
+                className="group bg-white rounded-xl border border-black/5 overflow-hidden hover:border-primary/20 transition-colors"
+              >
+                <summary className="flex items-center justify-between px-6 py-5 cursor-pointer list-none">
+                  <span className="font-semibold text-black group-open:text-primary transition-colors">
+                    {faq.q}
+                  </span>
+                  <ChevronDown className="w-5 h-5 text-black/40 group-open:rotate-180 group-open:text-primary transition-all flex-shrink-0 ml-4" />
+                </summary>
+                <div className="px-6 pb-5 text-black/60 leading-relaxed border-t border-black/5 pt-4">
+                  {faq.a}
+                </div>
+              </details>
+            ))}
           </div>
         </div>
       </section>
@@ -347,6 +670,17 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 z-50 w-12 h-12 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+          aria-label="Scroll to top"
+        >
+          <ChevronUp className="w-6 h-6 group-hover:-translate-y-0.5 transition-transform" />
+        </button>
+      )}
     </div>
   );
 }
