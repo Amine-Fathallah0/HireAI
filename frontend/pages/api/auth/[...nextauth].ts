@@ -2,6 +2,53 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import KeycloakProvider from "next-auth/providers/keycloak";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+/**
+ * Refreshes the access token using the refresh token
+ */
+async function refreshAccessToken(token: any) {
+  try {
+    console.log('[NextAuth] Refreshing access token...');
+    
+    const response = await fetch(
+      `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: process.env.KEYCLOAK_CLIENT_ID!,
+          client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
+          grant_type: 'refresh_token',
+          refresh_token: token.refreshToken,
+        }),
+      }
+    );
+
+    const refreshedTokens = await response.json();
+
+    if (!response.ok) {
+      console.error('[NextAuth] Token refresh failed:', refreshedTokens);
+      throw refreshedTokens;
+    }
+
+    console.log('[NextAuth] ✅ Token refreshed successfully');
+
+    return {
+      ...token,
+      accessToken: refreshedTokens.access_token,
+      idToken: refreshedTokens.id_token,
+      expiresAt: Math.floor(Date.now() / 1000) + refreshedTokens.expires_in,
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken, // Use new refresh token or keep old one
+    };
+  } catch (error) {
+    console.error('[NextAuth] ❌ Error refreshing access token:', error);
+
+    return {
+      ...token,
+      error: 'RefreshAccessTokenError',
+    };
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     KeycloakProvider({
@@ -76,21 +123,45 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account, user }) {
-      if (account) {
-        token.accessToken = account.access_token;
-        token.refreshToken = account.refresh_token;
-        token.idToken = account.id_token;
-        token.expiresAt = account.expires_at;
+      // Initial sign in - store tokens
+      if (account && user) {
+        console.log('[NextAuth] Initial sign in, storing tokens');
+        return {
+          ...token,
+          accessToken: account.access_token,
+          refreshToken: account.refresh_token,
+          idToken: account.id_token,
+          expiresAt: account.expires_at,
+          id: user.id,
+        };
       }
       
       // Handle credentials provider tokens
       if (user && account?.provider === 'credentials') {
-        token.accessToken = (user as any).accessToken;
-        token.refreshToken = (user as any).refreshToken;
-        token.idToken = (user as any).idToken;
+        console.log('[NextAuth] Credentials login, storing tokens');
+        return {
+          ...token,
+          accessToken: (user as any).accessToken,
+          refreshToken: (user as any).refreshToken,
+          idToken: (user as any).idToken,
+          expiresAt: Math.floor(Date.now() / 1000) + 1800, // Default 30 minutes
+          id: user.id,
+        };
       }
+
+      // Return previous token if the access token has not expired yet
+      const now = Math.floor(Date.now() / 1000);
+      const expiresAt = token.expiresAt as number;
       
-      return token;
+      // Check if token is still valid (with 2 minute buffer before expiry)
+      if (expiresAt && now < expiresAt - 120) {
+        console.log('[NextAuth] Token still valid, expires in', Math.floor((expiresAt - now) / 60), 'minutes');
+        return token;
+      }
+
+      // Token has expired or is about to expire, try to refresh it
+      console.log('[NextAuth] Token expired or expiring soon, refreshing...');
+      return refreshAccessToken(token);
     },
     async session({ session, token }) {
       // Pass all necessary tokens to the client session
@@ -98,11 +169,14 @@ export const authOptions: NextAuthOptions = {
       (session as any).idToken = token.idToken;
       (session as any).refreshToken = token.refreshToken;
       (session as any).error = token.error;
+      (session as any).expiresAt = token.expiresAt;
       
-      session.user = {
-        ...session.user,
-        id: token.sub,
-      };
+      if (session.user) {
+        session.user = {
+          ...session.user,
+          id: token.id as string || token.sub,
+        };
+      }
       return session;
     },
   },
@@ -111,7 +185,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 8 * 60 * 60, // 8 hours (should match or exceed Keycloak's SSO Session Max)
   },
   debug: true, // Enable debug mode to see detailed logs
 };
