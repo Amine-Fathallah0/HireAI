@@ -1,28 +1,13 @@
 import { GetServerSideProps } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from './api/auth/[...nextauth]';
-import { signOut, useSession } from 'next-auth/react';
+// Removed unused getServerSession, authOptions, signOut, axios
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { ArrowRight, Zap, Brain, BarChart3, Users, Sparkles, Menu, X, ChevronDown, ChevronUp, Shield, Lock, CheckCircle2, Upload, Wand2, Briefcase, FileCheck, HeadphonesIcon } from 'lucide-react';
+import { ArrowRight, Zap, Brain, BarChart3, Users, Sparkles, Menu, X, ChevronDown, ChevronUp, Upload, Wand2, Briefcase, FileCheck, Shield, Lock, HeadphonesIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PixelatedCanvas } from '@/components/ui/pixelated-canvas';
 import { FeaturesSection } from '@/components/ui/features-section';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
-
-interface UserProfile {
-  id: number;
-  keycloakId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  emailVerified: boolean;
-  isActive: boolean;
-  role: string;
-  createdAt: string;
-  lastLogin: string;
-}
 
 // Landing Page Component (shown when not authenticated)
 function LandingPage() {
@@ -685,280 +670,30 @@ function LandingPage() {
   );
 }
 
-// Dashboard Component (shown when authenticated)
-function Dashboard() {
-  const { data: session } = useSession();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [tokenStatus, setTokenStatus] = useState<'valid' | 'refreshing'>('valid');
-
-  // Check for token refresh errors
-  useEffect(() => {
-    if ((session as any)?.error === 'RefreshAccessTokenError') {
-      console.error('Token refresh failed, redirecting to sign in...');
-      signOut({ redirect: true, callbackUrl: '/auth/signin' });
-    }
-  }, [session]);
-
-  // Monitor token expiry
-  useEffect(() => {
-    if ((session as any)?.expiresAt) {
-      const updateStatus = () => {
-        const now = Math.floor(Date.now() / 1000);
-        const expiresAt = (session as any).expiresAt;
-        const secondsUntilExpiry = expiresAt - now;
-        
-        if (secondsUntilExpiry <= 0) {
-          setTokenStatus('refreshing');
-        } else if (secondsUntilExpiry <= 120) {
-          setTokenStatus('refreshing');
-        } else {
-          setTokenStatus('valid');
-        }
-      };
-
-      updateStatus();
-      const interval = setInterval(updateStatus, 10000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [(session as any)?.expiresAt]);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const accessToken = (session as any)?.accessToken;
-        
-        if (!accessToken) {
-          setError('No access token available. Please sign in again.');
-          setLoading(false);
-          return;
-        }
-
-        console.log('Fetching profile with token...');
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/profile`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-        });
-        console.log('Profile fetched successfully:', response.data);
-        setProfile(response.data);
-        setError(null);
-      } catch (err: any) {
-        console.error('Error fetching profile:', err);
-        
-        if (err.response?.status === 401) {
-          console.log('401 Unauthorized: Redirecting to sign-in page...');
-          signOut({ redirect: true, callbackUrl: '/auth/signin' });
-          return;
-        } else if (err.response) {
-          setError(`Server error: ${err.response.status} - ${err.response.data?.message || err.message}`);
-        } else if (err.request) {
-          setError('Network error: Unable to connect to the server. Please ensure the backend is running.');
-        } else {
-          setError(`Error: ${err.message}`);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (session) {
-      fetchProfile();
-    } else {
-      setLoading(false);
-    }
-  }, [session]);
-
-  const handleSignOut = async () => {
-    const keycloakIssuer = process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER || 'http://localhost:8080/realms/resume-platform';
-    const idToken = (session as any)?.idToken;
-    
-    if (!idToken) {
-      console.warn('No idToken found, performing local logout only');
-      await signOut({ callbackUrl: '/' });
-      return;
-    }
-    
-    const logoutUrl =
-      `${keycloakIssuer}/protocol/openid-connect/logout?` +
-      `id_token_hint=${idToken}&` +
-      `post_logout_redirect_uri=${encodeURIComponent(window.location.origin)}`;
-    
-    await signOut({ redirect: false });
-    window.location.href = logoutUrl;
-  };
-
-  const getTokenStatusBadge = () => {
-    if (tokenStatus === 'refreshing') {
-      return (
-        <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
-          <svg
-            className="mr-1.5 h-3 w-3 animate-spin text-blue-600"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          Refreshing...
-        </span>
-      );
-    }
-    return null;
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      <nav className="bg-white border-b border-black/5 shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm">
-                HA
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">HireAI</h1>
-              </div>
-              {getTokenStatusBadge()}
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-700">{session?.user?.email}</span>
-              <Button
-                onClick={handleSignOut}
-                variant="destructive"
-                size="sm"
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-lg bg-white p-6 shadow border border-black/5">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Welcome, {session?.user?.name || session?.user?.email}!
-          </h2>
-          
-          {loading && (
-            <div className="mt-4 flex items-center text-gray-600">
-              <svg
-                className="animate-spin h-5 w-5 mr-2 text-gray-500"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Loading profile...
-            </div>
-          )}
-          
-          {error && (
-            <div className="mt-4 rounded-md bg-red-50 p-4 border border-red-200">
-              <div className="flex">
-                <svg
-                  className="h-5 w-5 text-red-400 mr-2"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <div className="flex-1">
-                  <h3 className="text-sm font-medium text-red-800">Error</h3>
-                  <p className="mt-1 text-sm text-red-700">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {profile && (
-            <div className="mt-6 space-y-4">
-              <h3 className="text-lg font-semibold">Your Profile</h3>
-              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Name</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    {profile.firstName} {profile.lastName}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Email</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{profile.email}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Role</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{profile.role}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Status</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{profile.isActive ? 'Active' : 'Inactive'}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Email Verified</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{profile.emailVerified ? 'Yes' : 'No'}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Last Login</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{new Date(profile.lastLogin).toLocaleString()}</dd>
-                </div>
-              </dl>
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
-  );
-}
-
 // Main Component
 export default function Home() {
   const { data: session, status } = useSession();
+  const router = useRouter();
 
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <svg
-            className="animate-spin h-10 w-10 text-primary mx-auto mb-4"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
+          <svg className="animate-spin h-10 w-10 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Show landing page if not authenticated, dashboard if authenticated
-  return session ? <Dashboard /> : <LandingPage />;
+  // If authenticated, push to dedicated dashboard
+  if (session) {
+    router.replace('/dashboard');
+    return null;
+  }
+
+  // Otherwise render landing
+  return <LandingPage />;
 }
 
 // No server-side redirect - handle auth state on client
