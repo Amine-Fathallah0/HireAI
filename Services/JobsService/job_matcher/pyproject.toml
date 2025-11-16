@@ -1,0 +1,26 @@
+[project]
+name = "job_matcher"
+version = "0.1.0"
+description = "job-matcher using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[google-genai,tools]==1.4.1",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "httpx>=0.27.0",
+    "python-multipart>=0.0.9",
+]
+
+[project.scripts]
+kickoff = "job_matcher.main:kickoff"
+run_crew = "job_matcher.main:kickoff"
+plot = "job_matcher.main:plot"
+run_with_trigger = "job_matcher.main:run_with_trigger"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "flow"

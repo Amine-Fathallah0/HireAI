@@ -14,6 +14,19 @@ const config: Config = {
   			mono: ['monospace'],
   		},
   		colors: {
+  			// Design System Colors
+  			talent: {
+  				primary: '#22C55E',
+  				'primary-hover': '#16A34A',
+  				'primary-dark': '#15803D',
+  				'primary-light': '#F0FDF4',
+  			},
+  			purple: {
+  				accent: '#A855F7',
+  				'accent-hover': '#9333EA',
+  				'accent-light': '#F3E8FF',
+  			},
+  			// Shadcn compatibility
   			border: 'var(--border)',
   			input: 'var(--input)',
   			ring: 'var(--ring)',

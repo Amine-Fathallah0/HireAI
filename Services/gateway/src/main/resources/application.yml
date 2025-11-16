@@ -76,6 +76,22 @@ spring:
                 redis-rate-limiter.burstCapacity: 40
                 redis-rate-limiter.requestedTokens: 1
         
+        # Job Matcher Service Routes (Protected)
+        - id: job-matcher-route
+          uri: ${JOB_MATCHER_SERVICE_URL:http://localhost:8010}
+          predicates:
+            - Path=/api/v1/jobs/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5  # Lower rate for AI processing
+                redis-rate-limiter.burstCapacity: 10
+                redis-rate-limiter.requestedTokens: 1
+            - name: CircuitBreaker
+              args:
+                name: jobMatcherCircuitBreaker
+                fallbackUri: forward:/fallback/jobs
+        
         # Actuator endpoints (for health checks)
         - id: actuator-route
           uri: ${USER_SERVICE_URL:http://localhost:8081}
@@ -141,6 +157,9 @@ resilience4j:
         baseConfig: default
       userCircuitBreaker:
         baseConfig: default
+      jobMatcherCircuitBreaker:
+        baseConfig: default
+        waitDurationInOpenState: 30s  # Longer wait for AI service recovery
   
   timelimiter:
     configs:

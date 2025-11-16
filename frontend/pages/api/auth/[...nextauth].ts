@@ -8,6 +8,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 async function refreshAccessToken(token: any) {
   try {
     console.log('[NextAuth] Refreshing access token...');
+    console.log('[NextAuth] Refresh token present:', !!token.refreshToken);
+    console.log('[NextAuth] Token expiresAt:', token.expiresAt, 'Current time:', Math.floor(Date.now() / 1000));
     
     const response = await fetch(
       `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`,
@@ -113,6 +115,7 @@ export const authOptions: NextAuthOptions = {
             accessToken: tokens.access_token,
             refreshToken: tokens.refresh_token,
             idToken: tokens.id_token,
+            expiresIn: tokens.expires_in, // Include expires_in from Keycloak
           };
         } catch (error) {
           console.error('Authentication error:', error);
@@ -123,9 +126,26 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account, user }) {
-      // Initial sign in - store tokens
+      // Handle credentials provider tokens (must come first!)
+      if (user && account?.provider === 'credentials') {
+        const expiresIn = (user as any).expiresIn || 300; // Use actual expires_in or default to 5 minutes
+        const newExpiresAt = Math.floor(Date.now() / 1000) + expiresIn;
+        console.log('[NextAuth] Credentials login, storing tokens');
+        console.log('[NextAuth] ExpiresIn:', expiresIn, 'New ExpiresAt:', newExpiresAt);
+        console.log('[NextAuth] Has refresh token:', !!(user as any).refreshToken);
+        return {
+          ...token,
+          accessToken: (user as any).accessToken,
+          refreshToken: (user as any).refreshToken,
+          idToken: (user as any).idToken,
+          expiresAt: newExpiresAt,
+          id: user.id,
+        };
+      }
+      
+      // Handle OAuth providers (Keycloak)
       if (account && user) {
-        console.log('[NextAuth] Initial sign in, storing tokens');
+        console.log('[NextAuth] OAuth sign in, storing tokens');
         return {
           ...token,
           accessToken: account.access_token,
@@ -136,37 +156,31 @@ export const authOptions: NextAuthOptions = {
           provider: account.provider, // Store provider for logout
         };
       }
-      
-      // Handle credentials provider tokens
-      if (user && account?.provider === 'credentials') {
-        console.log('[NextAuth] Credentials login, storing tokens');
-        return {
-          ...token,
-          accessToken: (user as any).accessToken,
-          refreshToken: (user as any).refreshToken,
-          idToken: (user as any).idToken,
-          expiresAt: Math.floor(Date.now() / 1000) + 1800, // Default 30 minutes
-          id: user.id,
-          provider: 'credentials',
-        };
-      }
 
       // Return previous token if the access token has not expired yet
       const now = Math.floor(Date.now() / 1000);
       const expiresAt = token.expiresAt as number;
       
-      // Check if token is still valid (with 2 minute buffer before expiry)
-      if (expiresAt && now < expiresAt - 120) {
+      // Don't refresh if we don't have an expiresAt or if token is still valid
+      if (!expiresAt) {
+        console.log('[NextAuth] No expiresAt found, returning token as-is');
+        return token;
+      }
+      
+      // Check if token is still valid (with 30 second buffer before expiry)
+      if (now < expiresAt - 30) {
         console.log('[NextAuth] Token still valid, expires in', Math.floor((expiresAt - now) / 60), 'minutes');
         return token;
       }
 
       // Token has expired or is about to expire, try to refresh it
       console.log('[NextAuth] Token expired or expiring soon, refreshing...');
+      console.log('[NextAuth] Current time:', now, 'ExpiresAt:', expiresAt);
       return refreshAccessToken(token);
     },
     async session({ session, token }) {
       // Pass all necessary tokens to the client session
+      console.log('[NextAuth] Session callback - Has accessToken:', !!token.accessToken);
       (session as any).accessToken = token.accessToken;
       (session as any).idToken = token.idToken;
       (session as any).refreshToken = token.refreshToken;
