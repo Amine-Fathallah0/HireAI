@@ -22,4 +22,9 @@ public class AuthResponse {
     private String firstName;
     private String lastName;
     private String role;
+    
+    // Registration/Operation response fields
+    private Boolean success;
+    private String message;
+    private String keycloakId;
 }

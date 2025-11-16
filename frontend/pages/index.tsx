@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from './api/auth/[...nextauth]';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { ArrowRight, Zap, Brain, BarChart3, Users, Sparkles, Menu, X, ChevronDown, ChevronUp, Shield, Lock, CheckCircle2, Upload, Wand2, Briefcase, FileCheck, HeadphonesIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -694,9 +694,11 @@ function Dashboard() {
   const [tokenStatus, setTokenStatus] = useState<'valid' | 'refreshing'>('valid');
 
   // Check for token refresh errors
+  const hasSignedOut = useRef(false);
   useEffect(() => {
-    if ((session as any)?.error === 'RefreshAccessTokenError') {
+    if ((session as any)?.error === 'RefreshAccessTokenError' && !hasSignedOut.current) {
       console.error('Token refresh failed, redirecting to sign in...');
+      hasSignedOut.current = true;
       signOut({ redirect: true, callbackUrl: '/auth/signin' });
     }
   }, [session]);
@@ -728,7 +730,9 @@ function Dashboard() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        console.log('[Dashboard] Session object:', session);
         const accessToken = (session as any)?.accessToken;
+        console.log('[Dashboard] Access token:', accessToken ? 'Present' : 'Missing');
         
         if (!accessToken) {
           setError('No access token available. Please sign in again.');
@@ -844,6 +848,63 @@ function Dashboard() {
       </nav>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Quick Actions */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => router.push('/job-matcher')}
+            className="group bg-gradient-to-br from-talent-primary to-talent-primary-hover rounded-2xl p-6 text-left hover:shadow-lg transition-all hover:scale-105"
+          >
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <div className="inline-flex p-2 bg-white bg-opacity-20 rounded-lg">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-display font-bold text-white">AI Job Matcher</h3>
+                <p className="text-sm text-white text-opacity-90">
+                  Analyze job postings and get instant match scores
+                </p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </button>
+
+          <button
+            onClick={() => alert('Resume builder coming soon!')}
+            className="group bg-white border-2 border-gray-200 rounded-2xl p-6 text-left hover:border-purple-accent hover:shadow-md transition-all"
+          >
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <div className="inline-flex p-2 bg-purple-accent-light rounded-lg">
+                  <Upload className="w-6 h-6 text-purple-accent" />
+                </div>
+                <h3 className="text-lg font-display font-bold text-gray-900">Build Resume</h3>
+                <p className="text-sm text-gray-600">
+                  Create a professional resume with AI assistance
+                </p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </button>
+
+          <button
+            onClick={() => alert('My applications coming soon!')}
+            className="group bg-white border-2 border-gray-200 rounded-2xl p-6 text-left hover:border-blue-500 hover:shadow-md transition-all"
+          >
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <div className="inline-flex p-2 bg-blue-50 rounded-lg">
+                  <Briefcase className="w-6 h-6 text-blue-500" />
+                </div>
+                <h3 className="text-lg font-display font-bold text-gray-900">My Applications</h3>
+                <p className="text-sm text-gray-600">
+                  Track your job applications and responses
+                </p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </button>
+        </div>
+
         <div className="rounded-lg bg-white p-6 shadow border border-black/5">
           <h2 className="text-2xl font-bold text-gray-900">
             Welcome, {session?.user?.name || session?.user?.email}!
