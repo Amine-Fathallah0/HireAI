@@ -3,19 +3,14 @@ import { Upload, FileText, X, AlertCircle } from 'lucide-react';
 
 interface ResumeUploadProps {
   resumeFile: File | null;
-  resumeText: string;
   onFileChange: (file: File | null) => void;
-  onTextChange: (text: string) => void;
 }
 
 export function ResumeUpload({ 
   resumeFile, 
-  resumeText, 
-  onFileChange, 
-  onTextChange 
+  onFileChange
 }: ResumeUploadProps) {
   const [dragActive, setDragActive] = useState(false);
-  const [uploadMode, setUploadMode] = useState<'file' | 'text'>('file');
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -75,36 +70,11 @@ export function ResumeUpload({
           <h3 className="text-lg font-display font-semibold text-gray-900">
             Your Resume
           </h3>
-          <p className="text-sm text-gray-500">Upload or paste your resume content</p>
+          <p className="text-sm text-gray-500">Upload your resume file</p>
         </div>
       </div>
 
-      {/* Toggle Upload Mode */}
-      <div className="flex space-x-2 bg-gray-100 p-1 rounded-lg">
-        <button
-          onClick={() => setUploadMode('file')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-            uploadMode === 'file'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Upload File
-        </button>
-        <button
-          onClick={() => setUploadMode('text')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-            uploadMode === 'text'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Paste Text
-        </button>
-      </div>
-
-      {uploadMode === 'file' ? (
-        <div className="space-y-4">
+      <div className="space-y-4">
           {!resumeFile ? (
             <div
               onDragEnter={handleDrag}
@@ -163,24 +133,6 @@ export function ResumeUpload({
             </div>
           )}
         </div>
-      ) : (
-        <div className="space-y-2">
-          <label htmlFor="resume-text" className="block text-sm font-medium text-gray-700">
-            Resume Content
-          </label>
-          <textarea
-            id="resume-text"
-            value={resumeText}
-            onChange={(e) => onTextChange(e.target.value)}
-            rows={8}
-            placeholder="Paste your resume content here...&#10;&#10;Include your skills, experience, education, and any relevant information."
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-accent focus:ring-2 focus:ring-purple-accent focus:ring-opacity-10 outline-none transition-all resize-vertical"
-          />
-          <p className="text-xs text-gray-500">
-            {resumeText.length} characters
-          </p>
-        </div>
-      )}
 
       {/* Info Message */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start space-x-2">

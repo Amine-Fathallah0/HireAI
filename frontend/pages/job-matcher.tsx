@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import { 
   Sparkles, 
@@ -18,15 +19,84 @@ import { Button } from '@/components/ui/button';
 import { JobMatchResults } from '@/components/job-matcher/JobMatchResults';
 import { ResumeUpload } from '@/components/job-matcher/ResumeUpload';
 
+// Mock CV data (simulating previously uploaded CV)
+const MOCK_CV_DATA = {
+  personal_info: {
+    name: "John Doe",
+    email: "john.doe@example.com",
+    phone: "+1-555-0123",
+    location: "New York, NY"
+  },
+  summary: "Experienced Python developer with 5 years of backend development expertise. Strong skills in FastAPI, Django, and microservices architecture. Passionate about building scalable APIs and distributed systems.",
+  skills: [
+    "Python",
+    "FastAPI",
+    "Django",
+    "Docker",
+    "PostgreSQL",
+    "Redis",
+    "REST APIs",
+    "Microservices",
+    "Git",
+    "AWS"
+  ],
+  experience: [
+    {
+      title: "Backend Developer",
+      company: "Tech Solutions Inc",
+      duration: "2021-2024",
+      description: "Built and maintained REST APIs using FastAPI. Designed microservices architecture for e-commerce platform.",
+      key_achievements: [
+        "Led migration from monolith to microservices",
+        "Reduced API response time by 40%",
+        "Mentored 3 junior developers"
+      ]
+    },
+    {
+      title: "Junior Python Developer",
+      company: "StartupXYZ",
+      duration: "2019-2021",
+      description: "Developed backend features for SaaS platform using Django.",
+      key_achievements: [
+        "Integrated Stripe payment gateway",
+        "Built user authentication system"
+      ]
+    }
+  ],
+  education: [
+    {
+      degree: "Bachelor of Science in Computer Science",
+      institution: "University of Technology",
+      graduation_year: 2019,
+      field_of_study: "Computer Science"
+    }
+  ],
+  certifications: [
+    "AWS Certified Developer - Associate",
+    "Python Professional Certificate"
+  ],
+  languages: ["English", "Spanish"],
+  experience_level: "mid"
+};
+
 export default function JobMatcherPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   
   const [jobUrl, setJobUrl] = useState('');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [resumeText, setResumeText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [matchResult, setMatchResult] = useState<any>(null);
+  const [usingCurrentCV, setUsingCurrentCV] = useState(false);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [processingStatus, setProcessingStatus] = useState<string>('');
+
+  const handleUseCurrentCV = () => {
+    setUsingCurrentCV(true);
+    setResumeFile(null);
+    setError(null);
+  };
 
   const handleAnalyze = async () => {
     if (!jobUrl) {
@@ -34,8 +104,8 @@ export default function JobMatcherPage() {
       return;
     }
 
-    if (!resumeFile && !resumeText) {
-      setError('Please upload a resume or paste your resume text');
+    if (!resumeFile && !usingCurrentCV) {
+      setError('Please upload a resume or use your current CV');
       return;
     }
 
@@ -45,22 +115,26 @@ export default function JobMatcherPage() {
 
     try {
       // Prepare CV data
-      let cvData: any = {
-        text: resumeText || 'Resume content from uploaded file',
-      };
+      let cvData: any;
 
-      if (resumeFile) {
+      if (usingCurrentCV) {
+        // Use mock CV data (simulating previously uploaded CV)
+        cvData = MOCK_CV_DATA;
+      } else if (resumeFile) {
         // TODO: Parse PDF/DOCX file here
-        cvData.fileName = resumeFile.name;
+        cvData = {
+          text: 'Resume content from uploaded file',
+          fileName: resumeFile.name,
+        };
       }
 
-      // Call job-matcher microservice
+      // Call job-matcher microservice (returns 202 Accepted with request_id)
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_JOB_MATCHER_URL || 'http://localhost:8010'}/api/v1/jobs/extract`,
+        `${process.env.NEXT_PUBLIC_JOB_MATCHER_URL || 'http://localhost:8010'}/api/v1/jobs/match`,
         {
+          user_id: session?.user?.email || 'guest',
           job_url: jobUrl,
           cv_data: cvData,
-          candidate_id: user?.email || 'guest',
         },
         {
           headers: {
@@ -69,7 +143,16 @@ export default function JobMatcherPage() {
         }
       );
 
-      setMatchResult(response.data);
+      // API returns request_id and status="queued"
+      const { request_id, status } = response.data;
+      setRequestId(request_id);
+      setProcessingStatus(status);
+      
+      console.log(`✅ Job match request submitted: ${request_id}, status: ${status}`);
+      
+      // Start polling for results
+      pollForResults(request_id);
+      
     } catch (err: any) {
       console.error('Job matching error:', err);
       setError(
@@ -77,17 +160,69 @@ export default function JobMatcherPage() {
         err.response?.data?.message || 
         'Failed to analyze job match. Please try again.'
       );
-    } finally {
       setIsLoading(false);
     }
+  };
+
+  const pollForResults = async (reqId: string) => {
+    const maxAttempts = 60; // Poll for up to 5 minutes (60 attempts * 5 seconds)
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        attempts++;
+        
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_JOB_MATCHER_URL || 'http://localhost:8010'}/api/v1/jobs/match/${reqId}`
+        );
+
+        const { status, match_result, error: apiError } = response.data;
+        setProcessingStatus(status);
+
+        console.log(`📊 Poll attempt ${attempts}: status=${status}`);
+
+        if (status === 'completed' && match_result) {
+          // Success - show results
+          setMatchResult(match_result);
+          setIsLoading(false);
+          console.log('✅ Job matching completed successfully!');
+        } else if (status === 'failed') {
+          // Failed - show error
+          setError(apiError || 'Job matching failed. Please try again.');
+          setIsLoading(false);
+          console.error('❌ Job matching failed:', apiError);
+        } else if (attempts >= maxAttempts) {
+          // Timeout
+          setError('Job matching is taking longer than expected. Please try again later.');
+          setIsLoading(false);
+          console.error('⏱️ Polling timeout after', attempts, 'attempts');
+        } else {
+          // Still processing - poll again
+          setTimeout(poll, 5000); // Poll every 5 seconds
+        }
+      } catch (err: any) {
+        console.error('Polling error:', err);
+        if (attempts >= maxAttempts) {
+          setError('Failed to fetch results. Please try again.');
+          setIsLoading(false);
+        } else {
+          // Retry on error
+          setTimeout(poll, 5000);
+        }
+      }
+    };
+
+    poll();
   };
 
   const handleReset = () => {
     setJobUrl('');
     setResumeFile(null);
-    setResumeText('');
     setMatchResult(null);
     setError(null);
+    setUsingCurrentCV(false);
+    setRequestId(null);
+    setProcessingStatus('');
   };
 
   return (
@@ -145,7 +280,7 @@ export default function JobMatcherPage() {
                     <h3 className="text-lg font-display font-semibold text-gray-900">
                       Job Posting
                     </h3>
-                    <p className="text-sm text-gray-500">Paste the URL of the job you're interested in</p>
+                    <p className="text-sm text-gray-500">Paste the URL of the job you&apos;re interested in</p>
                   </div>
                 </div>
                 
@@ -168,13 +303,67 @@ export default function JobMatcherPage() {
               </div>
 
               {/* Resume Upload Card */}
-              <ResumeUpload
-                resumeFile={resumeFile}
-                resumeText={resumeText}
-                onFileChange={setResumeFile}
-                onTextChange={setResumeText}
-              />
+              <div className="space-y-4">
+                <ResumeUpload
+                  resumeFile={resumeFile}
+                  onFileChange={(file) => {
+                    setResumeFile(file);
+                    setUsingCurrentCV(false);
+                  }}
+                />
+                
+                {/* Use Current CV Button */}
+                <div className="flex items-center justify-center">
+                  <div className="relative w-full">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-gray-50 text-gray-500">or</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleUseCurrentCV}
+                  disabled={usingCurrentCV}
+                  className={`w-full px-4 py-3 border-2 rounded-xl font-medium transition-all ${
+                    usingCurrentCV
+                      ? 'border-talent-primary bg-talent-primary-light text-talent-primary'
+                      : 'border-gray-200 hover:border-talent-primary hover:bg-talent-primary-light text-gray-700 hover:text-talent-primary'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <FileText className="w-5 h-5" />
+                    <span>
+                      {usingCurrentCV ? 'Using Current CV ✓' : 'Use Current CV'}
+                    </span>
+                  </div>
+                  {usingCurrentCV && (
+                    <p className="text-xs mt-1 text-gray-600">
+                      John Doe - Backend Developer (5 years exp.)
+                    </p>
+                  )}
+                </button>
+              </div>
             </div>
+
+            {/* Processing Status Display */}
+            {isLoading && processingStatus && (
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-xl flex items-start space-x-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 flex-shrink-0"></div>
+                <div>
+                  <h4 className="text-sm font-medium text-blue-900">Processing</h4>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Status: <span className="font-semibold">{processingStatus}</span>
+                    {processingStatus === 'processing' && ' - This may take 30-60 seconds...'}
+                  </p>
+                  {requestId && (
+                    <p className="text-xs text-blue-600 mt-1">Request ID: {requestId.slice(0, 8)}...</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Error Display */}
             {error && (
@@ -191,7 +380,7 @@ export default function JobMatcherPage() {
             <div className="flex items-center justify-center space-x-4">
               <Button
                 onClick={handleAnalyze}
-                disabled={isLoading || !jobUrl || (!resumeFile && !resumeText)}
+                disabled={isLoading || !jobUrl || (!resumeFile && !usingCurrentCV)}
                 className="px-8 py-4 bg-gradient-to-r from-talent-primary to-talent-primary-hover text-gray-900 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {isLoading ? (
@@ -226,7 +415,7 @@ export default function JobMatcherPage() {
                 </div>
                 <h4 className="font-display font-semibold text-gray-900 mb-2">Skill Analysis</h4>
                 <p className="text-sm text-gray-600">
-                  See which skills you have and which ones you're missing
+                  See which skills you have and which ones you&apos;re missing
                 </p>
               </div>
               

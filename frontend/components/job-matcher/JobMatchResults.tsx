@@ -155,15 +155,31 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
             </h3>
           </div>
           {matchingSkills.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {matchingSkills.map((skill: string, index: number) => (
-                <span 
-                  key={index}
-                  className="px-3 py-1.5 bg-talent-primary-light text-talent-primary-dark border border-talent-primary border-opacity-20 rounded-full text-sm font-medium"
-                >
-                  {skill}
-                </span>
-              ))}
+            <div className="space-y-3">
+              {matchingSkills.map((skillObj: any, index: number) => {
+                const skillName = typeof skillObj === 'string' ? skillObj : skillObj.skill;
+                const candidateLevel = skillObj.candidate_level || '';
+                const requiredLevel = skillObj.required_level || '';
+                
+                return (
+                  <div 
+                    key={index}
+                    className="bg-talent-primary-light border border-talent-primary border-opacity-20 rounded-lg p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-talent-primary-dark">{skillName}</span>
+                      <CheckCircle2 className="w-4 h-4 text-talent-primary" />
+                    </div>
+                    {candidateLevel && requiredLevel && (
+                      <div className="mt-1 text-xs text-gray-600">
+                        <span className="font-medium">Your level:</span> {candidateLevel}
+                        {' • '}
+                        <span className="font-medium">Required:</span> {requiredLevel}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className="text-sm text-gray-500">No matching skills identified</p>
@@ -184,15 +200,33 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
             </h3>
           </div>
           {missingSkills.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {missingSkills.map((skill: string, index: number) => (
-                <span 
-                  key={index}
-                  className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-sm font-medium"
-                >
-                  {skill}
-                </span>
-              ))}
+            <div className="space-y-3">
+              {missingSkills.map((skillObj: any, index: number) => {
+                const skillName = typeof skillObj === 'string' ? skillObj : skillObj.skill;
+                const importance = skillObj.importance || '';
+                const impact = skillObj.impact_on_score || 0;
+                
+                return (
+                  <div 
+                    key={index}
+                    className="bg-amber-50 border border-amber-200 rounded-lg p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-amber-900">{skillName}</span>
+                      {impact < 0 && (
+                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
+                          {impact} pts
+                        </span>
+                      )}
+                    </div>
+                    {importance && (
+                      <div className="mt-1 text-xs text-amber-700">
+                        <span className="font-medium">Importance:</span> {importance}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className="text-sm text-gray-500">You have all the required skills!</p>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/button';
 import { Wand2, Upload, Briefcase, Zap } from 'lucide-react';
 import { ModuleCard } from '@/components/ui/module-card';
@@ -20,6 +21,8 @@ const ActionButton: React.FC<{ icon: React.ReactNode; title: string; desc: strin
   );
 
 export const QuickActions: React.FC = () => {
+  const router = useRouter();
+
   return (
     <ModuleCard 
       title="Quick Actions" 
@@ -38,8 +41,9 @@ export const QuickActions: React.FC = () => {
         />
         <ActionButton 
           icon={<Briefcase className="w-5 h-5 text-primary" />}
-          title="Optimize for Job"
-          desc="Tailor for specific role"
+          title="Job Matcher"
+          desc="Find your perfect job match with AI"
+          onClick={() => router.push('/job-matcher')}
         />
       </div>
     </ModuleCard>
