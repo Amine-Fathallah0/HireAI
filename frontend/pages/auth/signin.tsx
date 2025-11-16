@@ -15,6 +15,10 @@ export default function SignIn() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  // Check if user was redirected due to session expiry
+  const { expired } = router.query;
+  const wasExpired = expired === 'true';
+
   // Sign In Form State
   const [signInData, setSignInData] = useState({
     email: '',
@@ -178,6 +182,13 @@ export default function SignIn() {
             <div className="rounded-lg bg-green-50 border border-green-200 p-4 flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-green-800">{message}</p>
+            </div>
+          )}
+
+          {/* Session Expired Message */}
+          {wasExpired && !message && !error && (
+            <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+              <p className="text-sm text-yellow-800">Your session has expired. Please sign in again.</p>
             </div>
           )}
 

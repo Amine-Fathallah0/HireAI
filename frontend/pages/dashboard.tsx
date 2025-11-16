@@ -24,27 +24,33 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      {/* Top Row: Welcome + Quick Actions + Usage */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="space-y-6 lg:col-span-2">
-          <WelcomeModule />
+      {/* Hero: Welcome Banner */}
+      <WelcomeModule />
+
+      {/* Two-column responsive layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        {/* Left Column: Primary Actions + Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Usage + Quick Actions side-by-side */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <UsageMeters />
             <QuickActions />
           </div>
+
+          {/* Resumes + Matches */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <RecentResumes />
+            <MatchesPreview />
+          </div>
+
+          {/* Activity Feed */}
+          <ActivityFeed />
         </div>
-        <ProfileSummary />
-      </div>
 
-      {/* Middle Row: Resumes + Matches */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <RecentResumes />
-        <MatchesPreview />
-      </div>
-
-      {/* Activity */}
-      <div className="mt-6">
-        <ActivityFeed />
+        {/* Right Sidebar: Profile */}
+        <div className="lg:col-span-1">
+          <ProfileSummary />
+        </div>
       </div>
     </AppShell>
   );

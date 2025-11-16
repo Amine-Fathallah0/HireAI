@@ -25,8 +25,13 @@ api.interceptors.response.use(
   async (error) => {
     const status = error?.response?.status;
     if (status === 401) {
-      // Optional: redirect to sign in
-      await signOut({ redirect: true, callbackUrl: '/auth/signin' });
+      // Clear session and redirect to sign in
+      const session = await getSession();
+      if (session) {
+        await signOut({ redirect: false }); // Don't redirect immediately
+        // Redirect to signin with Keycloak logout
+        window.location.href = '/auth/signin?expired=true';
+      }
     }
     return Promise.reject(error);
   }

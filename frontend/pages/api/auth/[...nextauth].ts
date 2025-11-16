@@ -133,6 +133,7 @@ export const authOptions: NextAuthOptions = {
           idToken: account.id_token,
           expiresAt: account.expires_at,
           id: user.id,
+          provider: account.provider, // Store provider for logout
         };
       }
       
@@ -146,6 +147,7 @@ export const authOptions: NextAuthOptions = {
           idToken: (user as any).idToken,
           expiresAt: Math.floor(Date.now() / 1000) + 1800, // Default 30 minutes
           id: user.id,
+          provider: 'credentials',
         };
       }
 
@@ -170,6 +172,7 @@ export const authOptions: NextAuthOptions = {
       (session as any).refreshToken = token.refreshToken;
       (session as any).error = token.error;
       (session as any).expiresAt = token.expiresAt;
+      (session as any).provider = token.provider;
       
       if (session.user) {
         session.user = {
@@ -178,6 +181,31 @@ export const authOptions: NextAuthOptions = {
         };
       }
       return session;
+    },
+  },
+  events: {
+    async signOut({ token }: { token: any }) {
+      // Revoke the token with Keycloak when signing out
+      if (token?.provider === 'keycloak' && token?.refreshToken) {
+        try {
+          console.log('[NextAuth] Revoking Keycloak tokens on signout');
+          await fetch(
+            `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/logout`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({
+                client_id: process.env.KEYCLOAK_CLIENT_ID!,
+                client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
+                refresh_token: token.refreshToken,
+              }),
+            }
+          );
+          console.log('[NextAuth] ✅ Keycloak tokens revoked');
+        } catch (error) {
+          console.error('[NextAuth] ❌ Failed to revoke Keycloak tokens:', error);
+        }
+      }
     },
   },
   pages: {

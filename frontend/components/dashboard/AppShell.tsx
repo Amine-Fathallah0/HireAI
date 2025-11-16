@@ -3,6 +3,29 @@ import { useSession, signOut } from 'next-auth/react';
 
 export const AppShell: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { data: session } = useSession();
+  
+  const handleSignOut = async () => {
+    const provider = (session as any)?.provider;
+    const idToken = (session as any)?.idToken;
+    
+    // Sign out from NextAuth
+    await signOut({ redirect: false });
+    
+    // If Keycloak provider, also sign out from Keycloak to clear SSO session
+    if (provider === 'keycloak' && idToken) {
+      const keycloakIssuer = process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER || 'http://localhost:8080/realms/resume-platform';
+      const postLogoutRedirectUri = `${window.location.origin}/auth/signin`;
+      const keycloakLogoutUrl = 
+        `${keycloakIssuer}/protocol/openid-connect/logout?` +
+        `id_token_hint=${idToken}&` +
+        `post_logout_redirect_uri=${encodeURIComponent(postLogoutRedirectUri)}`;
+      window.location.href = keycloakLogoutUrl;
+    } else {
+      // For credentials provider, just redirect to signin
+      window.location.href = '/auth/signin';
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-background">
       <nav className="bg-white border-b border-black/5">
@@ -14,7 +37,7 @@ export const AppShell: React.FC<React.PropsWithChildren> = ({ children }) => {
           <div className="flex items-center gap-4 text-sm">
             <span className="hidden sm:inline text-black/70">{session?.user?.email}</span>
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={handleSignOut}
               className="h-9 px-3 rounded-md bg-red-600 text-white hover:bg-red-700"
             >
               Sign Out
