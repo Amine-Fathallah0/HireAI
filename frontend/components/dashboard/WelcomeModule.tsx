@@ -9,37 +9,30 @@ export const WelcomeModule: React.FC = () => {
   const timeOfDay = new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening';
   
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-black/5 bg-gradient-to-br from-primary/5 via-white to-white shadow-sm">
-      {/* Decorative gradient orb */}
-      <div className="absolute -right-12 -top-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
+    <div className="relative overflow-hidden rounded-2xl border-2 border-green-500/30 dark:border-green-500/40 bg-gradient-to-br from-green-50 via-white to-green-50/30 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 shadow-xl">
+      {/* Animated gradient orbs */}
+      <div className="absolute -right-16 -top-16 w-64 h-64 bg-green-500/20 dark:bg-green-500/30 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-green-400/10 dark:bg-green-400/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}} />
       
-      <div className="relative p-6 md:p-8">
+      {/* Dotted pattern overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(#22c55e15_1px,transparent_1px)] dark:bg-[radial-gradient(#22c55e25_1px,transparent_1px)] bg-[length:16px_16px] pointer-events-none" />
+      
+      <div className="relative p-6 md:p-10">
         <div className="flex items-start justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3">
-              <Sparkles className="w-3 h-3" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 dark:bg-green-500/20 border border-green-500/20 dark:border-green-500/30 text-green-700 dark:text-green-400 text-xs font-semibold mb-4 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5" />
               {timeOfDay}
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
-              Good {timeOfDay}, {firstName}
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
+              Good {timeOfDay}, <span className="text-green-600 dark:text-green-400">{firstName}</span>
             </h2>
-            <p className="text-sm md:text-base text-black/60 mt-2 max-w-2xl">
+            <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 mt-3 max-w-2xl leading-relaxed">
               Ready to take your career to the next level? Start by enhancing your resume or finding your perfect job match.
             </p>
           </div>
         </div>
         
-        <div className="mt-6 flex flex-col sm:flex-row gap-3">
-          <Button size="lg" className="sm:w-auto w-full shadow-sm">
-            <Upload className="w-4 h-4" /> Upload Resume
-          </Button>
-          <Button size="lg" variant="secondary" className="sm:w-auto w-full">
-            <Wand2 className="w-4 h-4" /> Enhance Now
-          </Button>
-          <Button size="lg" variant="outline" className="sm:w-auto w-full">
-            <Briefcase className="w-4 h-4" /> Find Jobs
-          </Button>
-        </div>
       </div>
     </div>
   );

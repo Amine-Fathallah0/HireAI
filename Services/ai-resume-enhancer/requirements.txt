@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic
+httpx
+langchain
+redis[hiredis]
+python-multipart
+pymupdf
+python-dotenv
+structlog
+opentelemetry-instrumentation-fastapi
+prometheus_client
+pinecone-client
+motor
+python-magic-bin; platform_system == "Windows"
+pydantic-settings

@@ -24,19 +24,19 @@ export const ActivityFeed: React.FC = () => {
     >
       {mockActivity.length === 0 ? (
         <div className="text-center py-8">
-          <Clock className="w-12 h-12 text-black/20 mx-auto mb-3" />
-          <p className="text-sm text-black/50">No recent activity</p>
+          <Clock className="w-12 h-12 text-black/20 dark:text-white/20 mx-auto mb-3" />
+          <p className="text-sm text-black/50 dark:text-white/50">No recent activity</p>
         </div>
       ) : (
         <ul className="space-y-2">
           {mockActivity.map(a => (
-            <li key={a.id} className="flex items-center gap-3 p-2 rounded-lg border border-black/5 hover:bg-black/5 transition-colors">
-              <div className="flex-shrink-0 w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+            <li key={a.id} className="flex items-center gap-3 p-2 rounded-lg border border-black/5 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              <div className="flex-shrink-0 w-8 h-8 rounded bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
                 {getActivityIcon(a.type)}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm text-gray-900">{a.label}</div>
-                <div className="text-xs text-black/50">
+                <div className="text-sm text-gray-900 dark:text-white">{a.label}</div>
+                <div className="text-xs text-black/50 dark:text-white/50">
                   {new Date(a.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
