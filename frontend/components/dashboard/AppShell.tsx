@@ -1,8 +1,12 @@
 import React from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { Moon, Sun } from 'lucide-react';
+import { useDarkMode } from '@/lib/hooks/useDarkMode';
+import Image from 'next/image';
 
 export const AppShell: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { data: session } = useSession();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   
   const handleSignOut = async () => {
     const provider = (session as any)?.provider;
@@ -27,15 +31,28 @@ export const AppShell: React.FC<React.PropsWithChildren> = ({ children }) => {
   };
   
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="bg-white border-b border-black/5">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-background dark:bg-gray-900 transition-colors duration-200">
+      <nav className="bg-white dark:bg-gray-800 border-b border-black/5 dark:border-white/10 shadow-sm relative z-50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm">HA</div>
-            <h1 className="text-lg font-semibold">HireAI</h1>
+            <Image 
+              src={isDarkMode ? '/logo-dark.png' : '/logo-light.png'} 
+              alt="HireAI Logo" 
+              width={400} 
+              height={130}
+              className="h-16 w-auto"
+              priority
+            />
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <span className="hidden sm:inline text-black/70">{session?.user?.email}</span>
+            <span className="hidden sm:inline text-black/70 dark:text-white/70">{session?.user?.email}</span>
+            <button
+              onClick={toggleDarkMode}
+              className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <button
               onClick={handleSignOut}
               className="h-9 px-3 rounded-md bg-red-600 text-white hover:bg-red-700"

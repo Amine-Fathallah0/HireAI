@@ -138,7 +138,7 @@ class JobMatcherFlow(Flow[JobMatcherState]):
             JobMatcherCrew()
             .matcher_crew()  # Use matcher_crew() instead of crew()
             .kickoff(inputs={
-                "cv_data": self.state.cv_data,           
+                "candidate_cv_data": self.state.cv_data,  # ✅ Match the task input name
                 "scraped_job_details": self.state.scraped_job,  
                 "candidate_id": self.state.candidate_id
             })
@@ -240,67 +240,18 @@ def run_with_trigger():
 
 def test_with_dummy_data():
     """
-    Quick test with dummy CV data and a real job URL
+    Test function - requires actual CV data and job URL
     """
-    dummy_cv = {
-        "personal_info": {
-            "name": "Test User",
-            "email": "test@example.com",
-            "location": "New York, NY"
-        },
-        "skills": ["Python", "FastAPI", "Docker", "PostgreSQL", "REST APIs"],
-        "experience": [
-            {
-                "title": "Backend Developer",
-                "company": "Tech Corp",
-                "duration": "2 years",
-                "achievements": [
-                    "Built microservices with FastAPI",
-                    "Optimized database queries"
-                ]
-            }
-        ],
-        "education": [
-            {
-                "degree": "BS Computer Science",
-                "university": "Tech University",
-                "graduation_year": 2021
-            }
-        ],
-        "experience_level": "mid"
-    }
+    # No dummy data - this function is for testing purposes only
+    # In production, CV data comes from the resume service via API
+    raise NotImplementedError(
+        "This is a test function. Use the API endpoint instead. "
+        "CV data should be fetched from the resume service."
+    )
     
-    test_payload = {
-        "cv_data": dummy_cv,
-        "candidate_id": "test_123",
-        # Replace with a real job URL for testing
-        "job_url": "https://www.indeed.com/viewjob?jk=2a4913120e775350&from=shareddesktop_copy"
-    }
-    
-    print("🧪 Testing JobMatcher Flow with specific job URL...")
-    print("="*60)
-    job_flow = JobMatcherFlow()
-    result = job_flow.kickoff(inputs={"crewai_trigger_payload": test_payload})
-    
-    print("\n" + "="*60)
-    print("✅ Test completed!")
-    print("="*60)
-    
-    if isinstance(result, dict):
-        print("\n📊 Match Result:")
-        print(f"Score: {result.get('overall_match_score', 'N/A')}/100")
-        print(f"Missing Skills: {len(result.get('missing_skills', []))}")
-        
-        resume_opt = result.get('resume_optimization', {})
-        if isinstance(resume_opt, dict):
-            keywords = resume_opt.get('keywords_to_add', [])
-            print(f"Resume Optimization Tips: {len(keywords)} keywords to add")
-    else:
-        print("\n⚠️  Result is not in expected format")
-        print(f"Result type: {type(result)}")
-    
-    return result
 
 
 if __name__ == "__main__":
-    test_with_dummy_data()
+    print("⚠️  This module should be run via the API, not directly.")
+    print("Use: docker-compose up job-matcher")
+    print("Then make requests to: http://localhost:8010/api/v1/jobs/match")

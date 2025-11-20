@@ -9,9 +9,13 @@ import {
   RefreshCw,
   Award,
   Target,
-  Sparkles
+  Sparkles,
+  Wand2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
+import axios from 'axios';
 
 interface JobMatchResultsProps {
   result: any;
@@ -20,6 +24,9 @@ interface JobMatchResultsProps {
 }
 
 export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProps) {
+  const router = useRouter();
+  const [applyingRecommendations, setApplyingRecommendations] = useState(false);
+  
   // Parse the result - handle both direct object and nested structures
   const matchData = result.match_result || result;
   const jobData = result.scraped_job || matchData.scraped_job_details || {};
@@ -29,16 +36,39 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
   const matchingSkills = matchData.matching_skills || [];
   const missingSkills = matchData.missing_skills || [];
   const resumeOptimization = matchData.resume_optimization || {};
+  const recommendationId = matchData.recommendation_id || result.recommendation_id;
+
+  const handleApplyRecommendations = async () => {
+    if (!recommendationId) {
+      alert('No recommendations available to apply');
+      return;
+    }
+
+    setApplyingRecommendations(true);
+    try {
+      // Mark recommendation as applied
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_RESUME_SERVICE_URL || 'http://localhost:8083'}/api/resume/recommendations/${recommendationId}/apply`
+      );
+
+      // Redirect to resume enhancer with recommendation context
+      router.push(`/resume/upload?recommendation_id=${recommendationId}`);
+    } catch (error) {
+      console.error('Failed to apply recommendations:', error);
+      alert('Failed to apply recommendations. Please try again.');
+      setApplyingRecommendations(false);
+    }
+  };
 
   // Determine score color and message
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-talent-primary';
+    if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-amber-500';
     return 'text-red-500';
   };
 
   const getScoreBgColor = (score: number) => {
-    if (score >= 80) return 'bg-talent-primary-light';
+    if (score >= 80) return 'bg-green-500/10';
     if (score >= 60) return 'bg-amber-50';
     return 'bg-red-50';
   };
@@ -53,13 +83,13 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 shadow-lg hover:shadow-xl transition-shadow">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
-              <Award className="w-6 h-6 text-talent-primary" />
-              <h2 className="text-2xl font-display font-bold text-gray-900">
-                Match Analysis Complete
+              <Award className="w-6 h-6 text-green-600" />
+              <h2 className="text-2xl font-bold text-gray-900">
+                Match Analysis <span className="text-green-600">Complete</span>
               </h2>
             </div>
             {jobData.title && (
@@ -74,7 +104,7 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
               href={jobUrl} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-flex items-center text-sm text-talent-primary hover:text-talent-primary-hover transition-colors"
+              className="inline-flex items-center text-sm text-green-600 hover:text-green-700 transition-colors"
             >
               View Original Posting
               <ExternalLink className="w-4 h-4 ml-1" />
@@ -91,15 +121,15 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
       </div>
 
       {/* Overall Match Score */}
-      <div className="bg-gradient-to-br from-talent-primary to-talent-primary-hover rounded-2xl p-8 text-center relative overflow-hidden">
+      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-8 text-center relative overflow-hidden shadow-xl">
         <div className="absolute inset-0 bg-white opacity-10 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.3),transparent)]"></div>
         <div className="relative z-10 space-y-4">
-          <div className="inline-flex items-center space-x-2 bg-white bg-opacity-20 px-4 py-2 rounded-full">
+          <div className="inline-flex items-center space-x-2 bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30">
             <Sparkles className="w-5 h-5 text-white" />
             <span className="text-white font-medium">Overall Match Score</span>
           </div>
           <div className="space-y-2">
-            <div className="text-7xl font-display font-bold text-white">
+            <div className="text-7xl font-bold text-white drop-shadow-lg">
               {matchScore}%
             </div>
             <p className="text-xl text-white font-medium">
@@ -111,10 +141,10 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
 
       {/* Score Breakdown */}
       {Object.keys(scoreBreakdown).length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 space-y-4 shadow-lg">
           <div className="flex items-center space-x-2">
-            <Target className="w-5 h-5 text-purple-accent" />
-            <h3 className="text-xl font-display font-semibold text-gray-900">
+            <Target className="w-5 h-5 text-green-600" />
+            <h3 className="text-xl font-semibold text-gray-900">
               Score Breakdown
             </h3>
           </div>
@@ -132,7 +162,7 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className={`h-2 rounded-full transition-all ${
-                      score >= 80 ? 'bg-talent-primary' : 
+                      score >= 80 ? 'bg-green-500' : 
                       score >= 60 ? 'bg-amber-500' : 'bg-red-500'
                     }`}
                     style={{ width: `${score}%` }}
@@ -147,10 +177,10 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
       {/* Skills Analysis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Matching Skills */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 space-y-4 shadow-lg">
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-5 h-5 text-talent-primary" />
-            <h3 className="text-xl font-display font-semibold text-gray-900">
+            <CheckCircle2 className="w-5 h-5 text-green-600" />
+            <h3 className="text-xl font-semibold text-gray-900">
               Matching Skills
             </h3>
           </div>
@@ -164,11 +194,11 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
                 return (
                   <div 
                     key={index}
-                    className="bg-talent-primary-light border border-talent-primary border-opacity-20 rounded-lg p-3"
+                    className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 hover:bg-green-500/15 transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-talent-primary-dark">{skillName}</span>
-                      <CheckCircle2 className="w-4 h-4 text-talent-primary" />
+                      <span className="font-semibold text-green-700">{skillName}</span>
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
                     </div>
                     {candidateLevel && requiredLevel && (
                       <div className="mt-1 text-xs text-gray-600">
@@ -192,10 +222,10 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
         </div>
 
         {/* Missing Skills */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 space-y-4 shadow-lg">
           <div className="flex items-center space-x-2">
             <AlertCircle className="w-5 h-5 text-amber-500" />
-            <h3 className="text-xl font-display font-semibold text-gray-900">
+            <h3 className="text-xl font-semibold text-gray-900">
               Skills to Develop
             </h3>
           </div>
@@ -241,10 +271,10 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
 
       {/* Resume Optimization Tips */}
       {resumeOptimization && Object.keys(resumeOptimization).length > 0 && (
-        <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl border border-purple-200 p-6 space-y-4">
+        <div className="bg-gradient-to-br from-green-50/50 to-green-100/30 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 space-y-4 shadow-lg">
           <div className="flex items-center space-x-2">
-            <Lightbulb className="w-6 h-6 text-purple-accent" />
-            <h3 className="text-xl font-display font-semibold text-gray-900">
+            <Lightbulb className="w-6 h-6 text-green-600" />
+            <h3 className="text-xl font-semibold text-gray-900">
               Resume Optimization Tips
             </h3>
           </div>
@@ -271,7 +301,7 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
                     <ul className="space-y-1">
                       {value.map((item: string, index: number) => (
                         <li key={index} className="text-sm text-gray-700 flex items-start">
-                          <span className="text-purple-accent mr-2">•</span>
+                          <span className="text-green-600 mr-2">•</span>
                           <span>{item}</span>
                         </li>
                       ))}
@@ -286,16 +316,28 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
       )}
 
       {/* Actions */}
-      <div className="flex items-center justify-center space-x-4 pt-4">
+      <div className="flex items-center justify-center space-x-4 pt-4 flex-wrap gap-4">
         <Button
           onClick={onReset}
-          className="px-6 py-3 bg-white border-2 border-gray-200 hover:border-talent-primary hover:bg-talent-primary-light text-gray-700 hover:text-talent-primary-dark rounded-xl font-semibold transition-all"
+          className="px-6 py-3 bg-white border-2 border-green-500/30 hover:border-green-500 hover:bg-green-500/10 text-gray-700 hover:text-green-700 rounded-xl font-semibold transition-all"
         >
           Analyze Another Job
         </Button>
+        
+        {recommendationId && (missingSkills.length > 0 || Object.keys(resumeOptimization).length > 0) && (
+          <Button
+            onClick={handleApplyRecommendations}
+            disabled={applyingRecommendations}
+            className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all border-2 border-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Wand2 className="w-5 h-5 mr-2" />
+            {applyingRecommendations ? 'Applying...' : 'Apply Recommendations to Resume'}
+          </Button>
+        )}
+        
         <Button
           onClick={() => window.print()}
-          className="px-6 py-3 bg-gradient-to-r from-talent-primary to-talent-primary-hover text-gray-900 rounded-xl font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all"
+          className="px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 rounded-xl font-semibold transition-all"
         >
           <Download className="w-5 h-5 mr-2" />
           Save Report

@@ -61,13 +61,16 @@ export function ResumeUpload({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4 hover:shadow-md transition-shadow">
+    <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 space-y-4 hover:shadow-lg hover:border-green-500/40 transition-all hover:-translate-y-0.5 relative overflow-hidden">
+      {/* Gradient overlay */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-green-600" />
+      
       <div className="flex items-center space-x-3">
-        <div className="p-2 bg-purple-accent-light rounded-lg">
-          <FileText className="w-6 h-6 text-purple-accent" />
+        <div className="p-2 bg-green-500/10 rounded-lg">
+          <FileText className="w-6 h-6 text-green-600" />
         </div>
         <div>
-          <h3 className="text-lg font-display font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900">
             Your Resume
           </h3>
           <p className="text-sm text-gray-500">Upload your resume file</p>
@@ -83,8 +86,8 @@ export function ResumeUpload({
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
                 dragActive
-                  ? 'border-talent-primary bg-talent-primary-light'
-                  : 'border-gray-300 bg-gray-50 hover:border-talent-primary hover:bg-talent-primary-light'
+                  ? 'border-green-500 bg-green-500/10'
+                  : 'border-gray-300 bg-gray-50 hover:border-green-500 hover:bg-green-500/5'
               }`}
             >
               <input
@@ -103,7 +106,7 @@ export function ResumeUpload({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">
-                    <span className="text-talent-primary">Click to upload</span> or drag and drop
+                    <span className="text-green-600 font-semibold">Click to upload</span> or drag and drop
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     PDF, DOC, DOCX or TXT (max 5MB)
@@ -135,9 +138,9 @@ export function ResumeUpload({
         </div>
 
       {/* Info Message */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start space-x-2">
-        <AlertCircle className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-700">
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-start space-x-2">
+        <AlertCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-green-700">
           Your resume data is processed securely and not stored on our servers.
         </p>
       </div>

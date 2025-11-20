@@ -94,13 +94,13 @@ job_match_results: Dict[str, Dict] = {}
 
 async def fetch_cv_from_resume_service(user_id: str) -> Dict:
     """
-    Fetch CV data from Resume Service
+    Fetch CV data from Resume Service (AI Resume Enhancer)
     
     Args:
         user_id: User ID to fetch CV for
         
     Returns:
-        CV data dictionary
+        CV data dictionary in job-matcher compatible format
         
     Raises:
         HTTPException: If resume service is unavailable or CV not found
@@ -118,18 +118,24 @@ async def fetch_cv_from_resume_service(user_id: str) -> Dict:
     
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(f"{RESUME_SERVICE_URL}/api/v1/resumes/{user_id}")
+            # Call the new cv-data endpoint that returns job-matcher compatible format
+            response = await client.get(
+                f"{RESUME_SERVICE_URL}/api/resume/user/{user_id}/latest-cv",
+                params={"use_enhanced": True}  # Use enhanced version if available
+            )
             
             if response.status_code == 404:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"CV not found for user_id: {user_id}"
+                    detail=f"No resume found for user_id: {user_id}. Please upload a resume first."
                 )
             
             response.raise_for_status()
-            cv_data = response.json()
-            logger.info(f"✅ Fetched CV for user {user_id} from resume service")
-            return cv_data.get("cv_data", cv_data)
+            data = response.json()
+            cv_data = data.get("cv_data")
+            
+            logger.info(f"✅ Fetched CV for user {user_id} from resume service (enhanced: {data.get('enhanced', False)})")
+            return cv_data
             
     except httpx.TimeoutException:
         logger.error(f"❌ Timeout fetching CV from resume service for user {user_id}")
@@ -143,6 +149,81 @@ async def fetch_cv_from_resume_service(user_id: str) -> Dict:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Resume service unavailable: {str(e)}"
         )
+
+
+async def send_recommendations_to_resume_service(
+    resume_id: str,
+    user_id: str,
+    job_url: str,
+    match_result: Dict
+):
+    """
+    Send job-specific recommendations to resume service
+    
+    Args:
+        resume_id: Resume ID (if available)
+        user_id: User ID
+        job_url: Job URL
+        match_result: Job matching results containing recommendations
+    """
+    if not RESUME_SERVICE_ENABLED:
+        logger.warning("Resume service not enabled, skipping recommendation save")
+        return
+    
+    try:
+        # Extract job info and recommendations from match result
+        job_data = match_result.get("scraped_job_details", {}) or match_result.get("scraped_job", {})
+        job_title = job_data.get("title", "Unknown Position")
+        company = job_data.get("company", "Unknown Company")
+        match_score = match_result.get("overall_match_score", 0)
+        
+        # Extract recommendations
+        recommendations_data = {
+            "missing_skills": match_result.get("missing_skills", []),
+            "keywords_to_add": match_result.get("ats_keywords", []),
+            "sections_to_improve": [],
+            "experience_gaps": [],
+            "suggestions": [],
+            "resume_optimization": match_result.get("resume_optimization", {})
+        }
+        
+        # If we have resume_optimization, extract suggestions
+        if "resume_optimization" in match_result:
+            opt = match_result["resume_optimization"]
+            if isinstance(opt, dict):
+                for key, value in opt.items():
+                    if isinstance(value, str):
+                        recommendations_data["suggestions"].append(f"{key}: {value}")
+                    elif isinstance(value, list):
+                        recommendations_data["suggestions"].extend(value)
+        
+        # Send to resume service
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{RESUME_SERVICE_URL}/api/resume/recommendations",
+                json={
+                    "resume_id": resume_id or "unknown",
+                    "user_id": user_id,
+                    "job_url": job_url,
+                    "job_title": job_title,
+                    "company": company,
+                    "match_score": match_score,
+                    "recommendations": recommendations_data
+                }
+            )
+            response.raise_for_status()
+            result = response.json()
+            logger.info(
+                "Recommendations sent to resume service",
+                recommendation_id=result.get("recommendation_id"),
+                user_id=user_id
+            )
+            return result.get("recommendation_id")
+            
+    except Exception as e:
+        logger.error(f"Failed to send recommendations to resume service: {e}")
+        # Don't fail the job match if recommendation save fails
+        return None
 
 
 def process_job_match(request_id: str, user_id: str, job_url: str, cv_data: Dict):
@@ -171,6 +252,28 @@ def process_job_match(request_id: str, user_id: str, job_url: str, cv_data: Dict
         # Run the JobMatcher Flow (synchronous call - CrewAI handles its own event loop)
         flow = JobMatcherFlow()
         result = flow.kickoff(inputs={"crewai_trigger_payload": trigger_payload})
+        
+        # Send recommendations to resume service (async, don't block on failure)
+        import asyncio
+        try:
+            # Get resume_id if available (from cv_data metadata or user's latest resume)
+            resume_id = cv_data.get("resume_id") if isinstance(cv_data, dict) else None
+            
+            # Run async function in sync context
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            recommendation_id = loop.run_until_complete(
+                send_recommendations_to_resume_service(resume_id, user_id, job_url, result)
+            )
+            loop.close()
+            
+            # Add recommendation_id to result
+            if recommendation_id:
+                result["recommendation_id"] = recommendation_id
+                
+        except Exception as e:
+            logger.warning(f"Failed to save recommendations: {e}")
+            # Continue even if recommendation save fails
         
         # Update results
         job_match_results[request_id].update({

@@ -92,6 +92,22 @@ spring:
                 name: jobMatcherCircuitBreaker
                 fallbackUri: forward:/fallback/jobs
         
+        # AI Resume Enhancer Service Routes (Protected)
+        - id: ai-resume-enhancer-route
+          uri: ${AI_RESUME_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/resumes/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 3  # Lower rate for heavy AI processing
+                redis-rate-limiter.burstCapacity: 5
+                redis-rate-limiter.requestedTokens: 1
+            - name: CircuitBreaker
+              args:
+                name: resumeEnhancerCircuitBreaker
+                fallbackUri: forward:/fallback/resumes
+        
         # Actuator endpoints (for health checks)
         - id: actuator-route
           uri: ${USER_SERVICE_URL:http://localhost:8081}
@@ -158,6 +174,9 @@ resilience4j:
       userCircuitBreaker:
         baseConfig: default
       jobMatcherCircuitBreaker:
+        baseConfig: default
+        waitDurationInOpenState: 30s  # Longer wait for AI service recovery
+      resumeEnhancerCircuitBreaker:
         baseConfig: default
         waitDurationInOpenState: 30s  # Longer wait for AI service recovery
   
