@@ -124,29 +124,29 @@ export default function UploadResume() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50/30 via-white to-green-50/20 relative">
+    <div className="min-h-screen bg-gradient-to-b from-green-50/30 via-white to-green-50/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 relative">
       {/* Static dotted pattern overlay */}
-      <div className="fixed inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none" />
+      <div className="fixed inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none" />
       
       {/* Header */}
-      <header className="relative z-10 bg-white/90 backdrop-blur-md border-b border-green-500/10 shadow-sm">
+      <header className="relative z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-green-500/10 dark:border-green-500/20 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
                 Back to Dashboard
               </button>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                <Wand2 className="w-6 h-6 text-green-600" />
+              <div className="w-10 h-10 rounded-xl bg-green-500/10 dark:bg-green-500/20 flex items-center justify-center">
+                <Wand2 className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Resume <span className="text-green-600">Enhancer</span>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Resume <span className="text-green-600 dark:text-green-400">Enhancer</span>
               </h1>
             </div>
           </div>
@@ -156,14 +156,14 @@ export default function UploadResume() {
       {/* Main Content */}
       <main className="relative z-10 mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-700 text-sm font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 dark:bg-green-500/20 border border-green-500/20 dark:border-green-500/30 text-green-700 dark:text-green-400 text-sm font-semibold mb-4">
             <Upload className="w-4 h-4" />
             AI Resume Enhancement
           </div>
-          <h2 className="text-5xl font-bold text-gray-900 mb-4">
-            Upload Your <span className="text-green-600">Resume</span>
+          <h2 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
+            Upload Your <span className="text-green-600 dark:text-green-400">Resume</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Upload your resume to get AI-powered suggestions and enhancements
           </p>
         </div>
@@ -171,13 +171,13 @@ export default function UploadResume() {
         {/* Two-column: Upload left, PDF preview right */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Upload Area */}
-          <div className="bg-white rounded-2xl shadow-xl border-2 border-green-500/20 p-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl" />
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border-2 border-green-500/20 dark:border-green-500/30 p-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 dark:bg-green-500/10 rounded-full blur-3xl" />
           <div
             className={`relative border-2 border-dashed rounded-xl p-12 transition-all duration-300 ${
               dragActive
-                ? 'border-primary bg-primary/5'
-                : 'border-gray-300 hover:border-primary/50 hover:bg-gray-50'
+                ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                : 'border-gray-300 dark:border-gray-600 hover:border-primary/50 dark:hover:border-primary/60 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -198,21 +198,21 @@ export default function UploadResume() {
               {file ? (
                 <>
                   <CheckCircle2 className="w-16 h-16 text-primary mx-auto mb-4" />
-                  <p className="text-lg font-medium text-gray-900 mb-2">{file.name}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">{file.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {(file.size / 1024).toFixed(2)} KB
                   </p>
                 </>
               ) : (
                 <>
-                  <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-lg font-medium text-gray-900 mb-2">
+                  <Upload className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                  <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                     Drop your PDF resume here
                   </p>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     or click to browse
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
                     Maximum file size: 5MB. Backend: {backend}
                   </p>
                 </>
@@ -259,40 +259,40 @@ export default function UploadResume() {
           )}
           </div>
           {/* PDF Preview */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 min-h-[600px]">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Preview</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 min-h-[600px]">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Preview</h3>
             <ResumePdfViewer fileUrl={previewUrl} />
           </div>
         </div>
 
         {/* Info Cards */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-4">
               <Upload className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Step 1: Upload</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Step 1: Upload</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Upload your existing resume in PDF format
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-4">
               <FileText className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Step 2: Review</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Step 2: Review</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Get AI suggestions from 3 expert agents
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-4">
               <CheckCircle2 className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Step 3: Download</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Step 3: Download</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Preview and download your enhanced resume
             </p>
           </div>
