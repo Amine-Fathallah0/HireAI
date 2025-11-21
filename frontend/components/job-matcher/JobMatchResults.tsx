@@ -83,20 +83,20 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 shadow-lg hover:shadow-xl transition-shadow">
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 dark:border-green-500/30 p-6 shadow-lg hover:shadow-xl transition-shadow">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
-              <Award className="w-6 h-6 text-green-600" />
-              <h2 className="text-2xl font-bold text-gray-900">
-                Match Analysis <span className="text-green-600">Complete</span>
+              <Award className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Match Analysis <span className="text-green-600 dark:text-green-400">Complete</span>
               </h2>
             </div>
             {jobData.title && (
               <div className="space-y-1">
-                <h3 className="text-lg font-semibold text-gray-700">{jobData.title}</h3>
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">{jobData.title}</h3>
                 {jobData.company && (
-                  <p className="text-sm text-gray-500">at {jobData.company}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">at {jobData.company}</p>
                 )}
               </div>
             )}
@@ -104,7 +104,7 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
               href={jobUrl} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-flex items-center text-sm text-green-600 hover:text-green-700 transition-colors"
+              className="inline-flex items-center text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-colors"
             >
               View Original Posting
               <ExternalLink className="w-4 h-4 ml-1" />
@@ -112,7 +112,7 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
           </div>
           <Button
             onClick={onReset}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             <span>New Analysis</span>
@@ -141,25 +141,25 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
 
       {/* Score Breakdown */}
       {Object.keys(scoreBreakdown).length > 0 && (
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 space-y-4 shadow-lg">
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 dark:border-green-500/30 p-6 space-y-4 shadow-lg">
           <div className="flex items-center space-x-2">
-            <Target className="w-5 h-5 text-green-600" />
-            <h3 className="text-xl font-semibold text-gray-900">
+            <Target className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               Score Breakdown
             </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(scoreBreakdown).map(([category, score]: [string, any]) => (
-              <div key={category} className="bg-gray-50 rounded-xl p-4 space-y-2">
+              <div key={category} className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700 capitalize">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
                     {category.replace(/_/g, ' ')}
                   </span>
                   <span className={`text-lg font-bold ${getScoreColor(score)}`}>
                     {score}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                   <div 
                     className={`h-2 rounded-full transition-all ${
                       score >= 80 ? 'bg-green-500' : 
@@ -177,10 +177,10 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
       {/* Skills Analysis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Matching Skills */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 space-y-4 shadow-lg">
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 dark:border-green-500/30 p-6 space-y-4 shadow-lg">
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            <h3 className="text-xl font-semibold text-gray-900">
+            <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               Matching Skills
             </h3>
           </div>
@@ -194,14 +194,14 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
                 return (
                   <div 
                     key={index}
-                    className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 hover:bg-green-500/15 transition-colors"
+                    className="bg-green-500/10 dark:bg-green-500/20 border border-green-500/30 dark:border-green-500/40 rounded-lg p-3 hover:bg-green-500/15 dark:hover:bg-green-500/25 transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-green-700">{skillName}</span>
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <span className="font-semibold text-green-700 dark:text-green-300">{skillName}</span>
+                      <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                     </div>
                     {candidateLevel && requiredLevel && (
-                      <div className="mt-1 text-xs text-gray-600">
+                      <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                         <span className="font-medium">Your level:</span> {candidateLevel}
                         {' • '}
                         <span className="font-medium">Required:</span> {requiredLevel}
@@ -212,20 +212,20 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
               })}
             </div>
           ) : (
-            <p className="text-sm text-gray-500">No matching skills identified</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">No matching skills identified</p>
           )}
-          <div className="pt-2 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
+          <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {matchingSkills.length} skill{matchingSkills.length !== 1 ? 's' : ''} match the job requirements
             </p>
           </div>
         </div>
 
         {/* Missing Skills */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 space-y-4 shadow-lg">
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 dark:border-green-500/30 p-6 space-y-4 shadow-lg">
           <div className="flex items-center space-x-2">
-            <AlertCircle className="w-5 h-5 text-amber-500" />
-            <h3 className="text-xl font-semibold text-gray-900">
+            <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               Skills to Develop
             </h3>
           </div>
@@ -239,18 +239,18 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
                 return (
                   <div 
                     key={index}
-                    className="bg-amber-50 border border-amber-200 rounded-lg p-3"
+                    className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg p-3"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-amber-900">{skillName}</span>
+                      <span className="font-semibold text-amber-900 dark:text-amber-300">{skillName}</span>
                       {impact < 0 && (
-                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
+                        <span className="text-xs bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full">
                           {impact} pts
                         </span>
                       )}
                     </div>
                     {importance && (
-                      <div className="mt-1 text-xs text-amber-700">
+                      <div className="mt-1 text-xs text-amber-700 dark:text-amber-400">
                         <span className="font-medium">Importance:</span> {importance}
                       </div>
                     )}
@@ -259,10 +259,10 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
               })}
             </div>
           ) : (
-            <p className="text-sm text-gray-500">You have all the required skills!</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">You have all the required skills!</p>
           )}
-          <div className="pt-2 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
+          <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {missingSkills.length} skill{missingSkills.length !== 1 ? 's' : ''} could strengthen your application
             </p>
           </div>
@@ -271,10 +271,10 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
 
       {/* Resume Optimization Tips */}
       {resumeOptimization && Object.keys(resumeOptimization).length > 0 && (
-        <div className="bg-gradient-to-br from-green-50/50 to-green-100/30 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 p-6 space-y-4 shadow-lg">
+        <div className="bg-gradient-to-br from-green-50/50 to-green-100/30 dark:from-green-900/20 dark:to-green-800/10 backdrop-blur-sm rounded-2xl border-2 border-green-500/20 dark:border-green-500/30 p-6 space-y-4 shadow-lg">
           <div className="flex items-center space-x-2">
-            <Lightbulb className="w-6 h-6 text-green-600" />
-            <h3 className="text-xl font-semibold text-gray-900">
+            <Lightbulb className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               Resume Optimization Tips
             </h3>
           </div>
@@ -282,11 +282,11 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
             {Object.entries(resumeOptimization).map(([key, value]: [string, any]) => {
               if (typeof value === 'string' && value.length > 0) {
                 return (
-                  <div key={key} className="bg-white rounded-xl p-4 space-y-2">
-                    <h4 className="font-semibold text-gray-900 capitalize">
+                  <div key={key} className="bg-white dark:bg-gray-800 rounded-xl p-4 space-y-2">
+                    <h4 className="font-semibold text-gray-900 dark:text-white capitalize">
                       {key.replace(/_/g, ' ')}
                     </h4>
-                    <p className="text-sm text-gray-700 leading-relaxed">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                       {value}
                     </p>
                   </div>
@@ -294,14 +294,14 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
               }
               if (Array.isArray(value) && value.length > 0) {
                 return (
-                  <div key={key} className="bg-white rounded-xl p-4 space-y-2">
-                    <h4 className="font-semibold text-gray-900 capitalize">
+                  <div key={key} className="bg-white dark:bg-gray-800 rounded-xl p-4 space-y-2">
+                    <h4 className="font-semibold text-gray-900 dark:text-white capitalize">
                       {key.replace(/_/g, ' ')}
                     </h4>
                     <ul className="space-y-1">
                       {value.map((item: string, index: number) => (
-                        <li key={index} className="text-sm text-gray-700 flex items-start">
-                          <span className="text-green-600 mr-2">•</span>
+                        <li key={index} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
+                          <span className="text-green-600 dark:text-green-400 mr-2">•</span>
                           <span>{item}</span>
                         </li>
                       ))}
@@ -319,7 +319,7 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
       <div className="flex items-center justify-center space-x-4 pt-4 flex-wrap gap-4">
         <Button
           onClick={onReset}
-          className="px-6 py-3 bg-white border-2 border-green-500/30 hover:border-green-500 hover:bg-green-500/10 text-gray-700 hover:text-green-700 rounded-xl font-semibold transition-all"
+          className="px-6 py-3 bg-white dark:bg-gray-800 border-2 border-green-500/30 dark:border-green-500/40 hover:border-green-500 hover:bg-green-500/10 dark:hover:bg-green-500/20 text-gray-700 dark:text-gray-200 hover:text-green-700 dark:hover:text-green-300 rounded-xl font-semibold transition-all"
         >
           Analyze Another Job
         </Button>
@@ -337,7 +337,7 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
         
         <Button
           onClick={() => window.print()}
-          className="px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 rounded-xl font-semibold transition-all"
+          className="px-6 py-3 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white rounded-xl font-semibold transition-all"
         >
           <Download className="w-5 h-5 mr-2" />
           Save Report

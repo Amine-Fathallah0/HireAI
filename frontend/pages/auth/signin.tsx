@@ -5,11 +5,14 @@ import { authOptions } from '../api/auth/[...nextauth]';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import axios from 'axios';
-import { ArrowRight, Sparkles, Mail, Lock, User, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Sparkles, Mail, Lock, User, CheckCircle2, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useDarkMode } from '@/lib/hooks/useDarkMode';
+import Image from 'next/image';
 
 export default function SignIn() {
   const router = useRouter();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -139,9 +142,9 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 relative overflow-hidden transition-colors duration-200">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none z-0" />
       
       {/* Animated Background Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -153,17 +156,35 @@ export default function SignIn() {
       </div>
 
       <div className="relative z-10 max-w-md w-full mx-4">
-        <div className="bg-white rounded-2xl shadow-2xl border border-black/5 p-8 space-y-6">
+        {/* Dark Mode Toggle Button - Top Right */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={toggleDarkMode}
+            className="h-10 w-10 flex items-center justify-center rounded-lg bg-white dark:bg-gray-800 border border-black/5 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors shadow-sm"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-black/5 dark:border-white/10 p-8 space-y-6">
           {/* Logo and Title */}
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-white font-bold text-2xl mx-auto shadow-lg">
-              HA
+            <div className="flex justify-center">
+              <Image 
+                src={isDarkMode ? '/logo-dark.png' : '/logo-light.png'} 
+                alt="HireAI Logo" 
+                width={400} 
+                height={130}
+                className="h-20 w-auto"
+                priority
+              />
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
                 {isSignUp ? 'Create Account' : 'Welcome Back'}
               </h2>
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                 {isSignUp ? 'Join HireAI to get started' : 'Sign in to your HireAI account'}
               </p>
             </div>
@@ -204,35 +225,35 @@ export default function SignIn() {
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     First Name
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                     <input
                       id="firstName"
                       type="text"
                       required
                       value={signUpData.firstName}
                       onChange={(e) => setSignUpData({ ...signUpData, firstName: e.target.value })}
-                      className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                       placeholder="John"
                     />
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Last Name
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                     <input
                       id="lastName"
                       type="text"
                       required
                       value={signUpData.lastName}
                       onChange={(e) => setSignUpData({ ...signUpData, lastName: e.target.value })}
-                      className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                       placeholder="Doe"
                     />
                   </div>
@@ -240,69 +261,69 @@ export default function SignIn() {
               </div>
               
               <div>
-                <label htmlFor="signUpEmail" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor="signUpEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                   <input
                     id="signUpEmail"
                     type="email"
                     required
                     value={signUpData.email}
                     onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
-                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="john@example.com"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="signUpPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor="signUpPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                   <input
                     id="signUpPassword"
                     type="password"
                     required
                     value={signUpData.password}
                     onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
-                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="••••••••"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                   <input
                     id="confirmPassword"
                     type="password"
                     required
                     value={signUpData.confirmPassword}
                     onChange={(e) => setSignUpData({ ...signUpData, confirmPassword: e.target.value })}
-                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="••••••••"
                   />
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
                 <input
                   id="consentAiProcessing"
                   type="checkbox"
                   required
                   checked={signUpData.consentAiProcessing}
                   onChange={(e) => setSignUpData({ ...signUpData, consentAiProcessing: e.target.checked })}
-                  className="mt-0.5 w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                  className="mt-0.5 w-4 h-4 text-primary border-gray-300 dark:border-gray-600 rounded focus:ring-primary"
                 />
-                <label htmlFor="consentAiProcessing" className="text-xs text-gray-700 leading-relaxed">
+                <label htmlFor="consentAiProcessing" className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
                   I consent to AI processing of my data for resume enhancement and job matching purposes. <span className="text-red-500">*</span>
                 </label>
               </div>
@@ -333,36 +354,36 @@ export default function SignIn() {
             /* Sign In Form */
             <form onSubmit={handleSignIn} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                   <input
                     id="email"
                     type="email"
                     required
                     value={signInData.email}
                     onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
-                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="john@example.com"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                   <input
                     id="password"
                     type="password"
                     required
                     value={signInData.password}
                     onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
-                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     placeholder="••••••••"
                   />
                 </div>
@@ -409,10 +430,10 @@ export default function SignIn() {
           {/* Divider */}
           <div className="relative py-2">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
+              <div className="w-full border-t border-gray-200 dark:border-gray-700" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-white px-3 text-xs text-gray-500">
+              <span className="bg-white dark:bg-gray-800 px-3 text-xs text-gray-500 dark:text-gray-400">
                 Or continue with
               </span>
             </div>
@@ -424,7 +445,7 @@ export default function SignIn() {
             onClick={handleGoogleSignIn}
             variant="outline"
             size="lg"
-            className="w-full border-gray-300 hover:bg-gray-50"
+            className="w-full border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -438,7 +459,7 @@ export default function SignIn() {
 
         {/* Footer Link */}
         <div className="mt-6 text-center">
-          <a href="/" className="text-sm text-gray-500 hover:text-primary transition-colors inline-flex items-center gap-1">
+          <a href="/" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition-colors inline-flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>

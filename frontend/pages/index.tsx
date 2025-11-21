@@ -3,15 +3,18 @@ import { GetServerSideProps } from 'next';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { ArrowRight, Zap, Brain, BarChart3, Users, Sparkles, Menu, X, ChevronDown, ChevronUp, Upload, Wand2, Briefcase, FileCheck, Shield, Lock, HeadphonesIcon } from 'lucide-react';
+import { ArrowRight, Zap, Brain, BarChart3, Users, Sparkles, Menu, X, ChevronDown, ChevronUp, Upload, Wand2, Briefcase, FileCheck, Shield, Lock, HeadphonesIcon, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PixelatedCanvas } from '@/components/ui/pixelated-canvas';
 import { FeaturesSection } from '@/components/ui/features-section';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
+import { useDarkMode } from '@/lib/hooks/useDarkMode';
+import Image from 'next/image';
 
 // Landing Page Component (shown when not authenticated)
 function LandingPage() {
   const router = useRouter();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -33,43 +36,54 @@ function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-foreground overflow-hidden relative">
-      <div className="absolute inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none" />
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-foreground dark:text-white overflow-hidden relative transition-colors duration-200">
+      <div className="absolute inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none" />
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 border-b border-black/5 backdrop-blur-md bg-white/80">
+      <nav className="fixed top-0 w-full z-50 border-b border-black/5 dark:border-white/10 backdrop-blur-md bg-white/80 dark:bg-gray-900/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm">
-              HA
-            </div>
-            <span className="font-bold text-lg text-foreground">HireAI</span>
+            <Image 
+              src={isDarkMode ? '/logo-dark.png' : '/logo-light.png'} 
+              alt="HireAI Logo" 
+              width={400} 
+              height={130}
+              className="h-16 w-auto"
+              priority
+            />
           </div>
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#how-it-works" className="text-sm text-black/60 hover:text-black transition">
+            <a href="#how-it-works" className="text-sm text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition">
               How It Works
             </a>
-            <a href="#features" className="text-sm text-black/60 hover:text-black transition">
+            <a href="#features" className="text-sm text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition">
               Features
             </a>
-            <a href="#testimonials" className="text-sm text-black/60 hover:text-black transition">
+            <a href="#testimonials" className="text-sm text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition">
               Reviews
             </a>
-            <a href="#faq" className="text-sm text-black/60 hover:text-black transition">
+            <a href="#faq" className="text-sm text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition">
               FAQ
             </a>
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={toggleDarkMode}
+              className="hidden md:flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <Button size="sm" className="hidden md:inline-flex bg-primary hover:bg-primary/90 text-white" onClick={handleSignInClick}>
               Sign In
             </Button>
             
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 rounded-lg hover:bg-black/5 transition"
+              className="md:hidden p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -79,20 +93,28 @@ function LandingPage() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-black/5 bg-white">
+          <div className="md:hidden border-t border-black/5 dark:border-white/10 bg-white dark:bg-gray-900">
             <div className="px-4 py-4 space-y-3">
-              <a href="#how-it-works" className="block py-2 text-sm text-black/60 hover:text-black transition" onClick={() => setMobileMenuOpen(false)}>
+              <a href="#how-it-works" className="block py-2 text-sm text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>
                 How It Works
               </a>
-              <a href="#features" className="block py-2 text-sm text-black/60 hover:text-black transition" onClick={() => setMobileMenuOpen(false)}>
+              <a href="#features" className="block py-2 text-sm text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>
                 Features
               </a>
-              <a href="#testimonials" className="block py-2 text-sm text-black/60 hover:text-black transition" onClick={() => setMobileMenuOpen(false)}>
+              <a href="#testimonials" className="block py-2 text-sm text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>
                 Reviews
               </a>
-              <a href="#faq" className="block py-2 text-sm text-black/60 hover:text-black transition" onClick={() => setMobileMenuOpen(false)}>
+              <a href="#faq" className="block py-2 text-sm text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>
                 FAQ
               </a>
+              <button
+                onClick={toggleDarkMode}
+                className="flex w-full items-center justify-center h-9 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? <Sun className="w-5 h-5 mr-2" /> : <Moon className="w-5 h-5 mr-2" />}
+                {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+              </button>
               <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-white" onClick={handleSignInClick}>
                 Sign In
               </Button>
@@ -124,7 +146,7 @@ function LandingPage() {
           </div>
 
           {/* Headline */}
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight text-black">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight text-black dark:text-white">
             Land Your Dream Job with
             <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
               {' '}
@@ -134,7 +156,7 @@ function LandingPage() {
           </h1>
 
           {/* Subheading */}
-          <p className="text-xl text-black/60 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-black/60 dark:text-white/60 max-w-2xl mx-auto leading-relaxed">
             HireAI adapts your resume for every job application. Our intelligent agents customize your
             experience, skills, and achievements to match job descriptions—increasing your chances of getting noticed by
             recruiters.
@@ -146,7 +168,7 @@ function LandingPage() {
               Customize Your Resume
               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button size="lg" variant="outline" className="border-black/10 hover:bg-black/5 text-black bg-white">
+            <Button size="lg" variant="outline" className="border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-black dark:text-white bg-white dark:bg-gray-800">
               See How It Works
             </Button>
           </div>
@@ -156,7 +178,7 @@ function LandingPage() {
       {/* How It Works Section */}
       <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 relative z-10 overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-white pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-white dark:from-gray-800/50 dark:to-gray-900 pointer-events-none" />
         
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16 space-y-4">
@@ -164,8 +186,8 @@ function LandingPage() {
               <Sparkles className="w-4 h-4" />
               Simple Process
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold text-black">How It Works</h2>
-            <p className="text-lg text-black/60 max-w-2xl mx-auto">
+            <h2 className="text-4xl sm:text-5xl font-bold text-black dark:text-white">How It Works</h2>
+            <p className="text-lg text-black/60 dark:text-white/60 max-w-2xl mx-auto">
               Get started in minutes and land your dream job in 3 simple steps
             </p>
           </div>
@@ -202,10 +224,10 @@ function LandingPage() {
                     </div>
                   )}
 
-                  <div className={`relative bg-white rounded-3xl p-8 border-2 transition-all duration-500 h-full ${
+                  <div className={`relative bg-white dark:bg-gray-800 rounded-3xl p-8 border-2 transition-all duration-500 h-full ${
                     isMiddle 
                       ? 'border-primary shadow-lg md:scale-105 md:-translate-y-2' 
-                      : 'border-black/5 hover:border-primary/30 hover:shadow-lg hover:scale-105'
+                      : 'border-black/5 dark:border-white/10 hover:border-primary/30 hover:shadow-lg hover:scale-105'
                   }`}>
                     {/* Gradient Background */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -224,10 +246,10 @@ function LandingPage() {
 
                     {/* Content */}
                     <div className="relative">
-                      <h3 className="text-xl font-bold text-black mb-3 group-hover:text-primary transition-colors duration-300">
+                      <h3 className="text-xl font-bold text-black dark:text-white mb-3 group-hover:text-primary transition-colors duration-300">
                         {item.title}
                       </h3>
-                      <p className="text-black/60 leading-relaxed">
+                      <p className="text-black/60 dark:text-white/60 leading-relaxed">
                         {item.desc}
                       </p>
                     </div>
@@ -243,7 +265,7 @@ function LandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section id="stats" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-black/5 relative z-10">
+      <section id="stats" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-black/5 dark:border-white/10 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="space-y-2 text-center">
@@ -252,7 +274,7 @@ function LandingPage() {
                 suffix="%"
                 className="text-3xl sm:text-4xl font-bold text-primary"
               />
-              <p className="text-sm text-black/60">Interview success rate</p>
+              <p className="text-sm text-black/60 dark:text-white/60">Interview success rate</p>
             </div>
             <div className="space-y-2 text-center">
               <AnimatedCounter
@@ -260,7 +282,7 @@ function LandingPage() {
                 suffix="K+"
                 className="text-3xl sm:text-4xl font-bold text-primary"
               />
-              <p className="text-sm text-black/60">Resumes enhanced</p>
+              <p className="text-sm text-black/60 dark:text-white/60">Resumes enhanced</p>
             </div>
             <div className="space-y-2 text-center">
               <AnimatedCounter
@@ -268,7 +290,7 @@ function LandingPage() {
                 suffix="%"
                 className="text-3xl sm:text-4xl font-bold text-primary"
               />
-              <p className="text-sm text-black/60">ATS compatibility</p>
+              <p className="text-sm text-black/60 dark:text-white/60">ATS compatibility</p>
             </div>
             <div className="space-y-2 text-center">
               <AnimatedCounter
@@ -276,7 +298,7 @@ function LandingPage() {
                 suffix="K+"
                 className="text-3xl sm:text-4xl font-bold text-primary"
               />
-              <p className="text-sm text-black/60">Students helped</p>
+              <p className="text-sm text-black/60 dark:text-white/60">Students helped</p>
             </div>
           </div>
         </div>
@@ -290,8 +312,8 @@ function LandingPage() {
               <Zap className="w-4 h-4" />
               Powerful Features
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold text-black">Everything You Need to Land Your Dream Job</h2>
-            <p className="text-lg text-black/60 max-w-2xl mx-auto">
+            <h2 className="text-4xl sm:text-5xl font-bold text-black dark:text-white">Everything You Need to Land Your Dream Job</h2>
+            <p className="text-lg text-black/60 dark:text-white/60 max-w-2xl mx-auto">
               AI-powered tools to create standout resumes, match with opportunities, and ace your job search.
             </p>
           </div>
@@ -335,7 +357,7 @@ function LandingPage() {
               return (
                 <div
                   key={i}
-                  className="group relative p-8 rounded-2xl border border-black/5 hover:border-primary/30 bg-white hover:shadow-lg transition-all duration-300 overflow-hidden"
+                  className="group relative p-8 rounded-2xl border border-black/5 dark:border-white/10 hover:border-primary/30 bg-white dark:bg-gray-800 hover:shadow-lg transition-all duration-300 overflow-hidden"
                 >
                   {/* Pixelated Canvas Background Effect - Static, No Interaction */}
                   <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -359,7 +381,7 @@ function LandingPage() {
                   </div>
 
                   {/* Subtle Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/60 to-white/80 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/60 to-white/80 dark:from-gray-800/80 dark:via-gray-800/60 dark:to-gray-800/80 pointer-events-none" />
 
                   <div className="relative z-10">
                     {/* Icon - Simple, No Animation */}
@@ -368,12 +390,12 @@ function LandingPage() {
                     </div>
 
                     {/* Title - Simple Color Change */}
-                    <h3 className="font-bold text-xl text-black mb-3 group-hover:text-primary transition-colors duration-200">
+                    <h3 className="font-bold text-xl text-black dark:text-white mb-3 group-hover:text-primary transition-colors duration-200">
                       {item.title}
                     </h3>
                     
                     {/* Description */}
-                    <p className="text-black/60 leading-relaxed">
+                    <p className="text-black/60 dark:text-white/60 leading-relaxed">
                       {item.desc}
                     </p>
                   </div>
@@ -385,15 +407,15 @@ function LandingPage() {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50/50 to-white relative z-10">
+      <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50/50 to-white dark:from-gray-800/50 dark:to-gray-900 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-medium">
               <Sparkles className="w-4 h-4" />
               Success Stories
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold text-black">Loved by Job Seekers</h2>
-            <p className="text-lg text-black/60 max-w-2xl mx-auto">
+            <h2 className="text-4xl sm:text-5xl font-bold text-black dark:text-white">Loved by Job Seekers</h2>
+            <p className="text-lg text-black/60 dark:text-white/60 max-w-2xl mx-auto">
               See how HireAI helped thousands land their dream jobs
             </p>
           </div>
@@ -425,7 +447,7 @@ function LandingPage() {
                 rating: 5,
               },
             ].map((testimonial, i) => (
-              <div key={i} className="bg-white rounded-2xl p-8 border border-black/5 hover:shadow-lg transition-all duration-300">
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-black/5 dark:border-white/10 hover:shadow-lg transition-all duration-300">
                 {/* Rating Stars */}
                 <div className="flex gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
@@ -436,7 +458,7 @@ function LandingPage() {
                 </div>
 
                 {/* Testimonial Text */}
-                <p className="text-black/70 leading-relaxed mb-6 italic">
+                <p className="text-black/70 dark:text-white/70 leading-relaxed mb-6 italic">
                   &ldquo;{testimonial.text}&rdquo;
                 </p>
 
@@ -446,8 +468,8 @@ function LandingPage() {
                     {testimonial.image}
                   </div>
                   <div>
-                    <div className="font-semibold text-black">{testimonial.name}</div>
-                    <div className="text-sm text-black/60">
+                    <div className="font-semibold text-black dark:text-white">{testimonial.name}</div>
+                    <div className="text-sm text-black/60 dark:text-white/60">
                       {testimonial.role} at {testimonial.company}
                     </div>
                   </div>
@@ -458,7 +480,7 @@ function LandingPage() {
 
           {/* Trust & Benefits - Modern Grid */}
           <div className="mt-20">
-            <p className="text-center text-sm text-black/40 mb-12 uppercase tracking-wider font-medium">
+            <p className="text-center text-sm text-black/40 dark:text-white/40 mb-12 uppercase tracking-wider font-medium">
               Trusted & Secure
             </p>
             <FeaturesSection
@@ -497,7 +519,7 @@ function LandingPage() {
               <Sparkles className="w-4 h-4" />
               Got Questions?
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold text-black">Frequently Asked Questions</h2>
+            <h2 className="text-4xl sm:text-5xl font-bold text-black dark:text-white">Frequently Asked Questions</h2>
           </div>
 
           <div className="space-y-3">
@@ -529,15 +551,15 @@ function LandingPage() {
             ].map((faq, i) => (
               <details
                 key={i}
-                className="group bg-white rounded-xl border border-black/5 overflow-hidden hover:border-primary/20 transition-colors"
+                className="group bg-white dark:bg-gray-800 rounded-xl border border-black/5 dark:border-white/10 overflow-hidden hover:border-primary/20 transition-colors"
               >
                 <summary className="flex items-center justify-between px-6 py-5 cursor-pointer list-none">
-                  <span className="font-semibold text-black group-open:text-primary transition-colors">
+                  <span className="font-semibold text-black dark:text-white group-open:text-primary transition-colors">
                     {faq.q}
                   </span>
-                  <ChevronDown className="w-5 h-5 text-black/40 group-open:rotate-180 group-open:text-primary transition-all flex-shrink-0 ml-4" />
+                  <ChevronDown className="w-5 h-5 text-black/40 dark:text-white/40 group-open:rotate-180 group-open:text-primary transition-all flex-shrink-0 ml-4" />
                 </summary>
-                <div className="px-6 pb-5 text-black/60 leading-relaxed border-t border-black/5 pt-4">
+                <div className="px-6 pb-5 text-black/60 dark:text-white/60 leading-relaxed border-t border-black/5 dark:border-white/10 pt-4">
                   {faq.a}
                 </div>
               </details>
@@ -547,10 +569,10 @@ function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section id="cta" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-black/5 relative z-10">
+      <section id="cta" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-black/5 dark:border-white/10 relative z-10">
         <div className="max-w-3xl mx-auto text-center space-y-8 p-8 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <h2 className="text-4xl sm:text-5xl font-bold text-black">Ready to accelerate your career?</h2>
-          <p className="text-lg text-black/60">
+          <h2 className="text-4xl sm:text-5xl font-bold text-black dark:text-white">Ready to accelerate your career?</h2>
+          <p className="text-lg text-black/60 dark:text-white/60">
             Join thousands of students and job seekers using HireAI to land their dream jobs faster.
           </p>
           <Button size="lg" className="bg-primary hover:bg-primary/90 text-white group mx-auto" onClick={handleSignInClick}>
@@ -561,91 +583,91 @@ function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-black/5 py-12 px-4 sm:px-6 lg:px-8 bg-white relative z-10">
+      <footer className="border-t border-black/5 dark:border-white/10 py-12 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
-              <h4 className="font-semibold mb-4 text-black">Product</h4>
-              <ul className="space-y-2 text-sm text-black/60">
+              <h4 className="font-semibold mb-4 text-black dark:text-white">Product</h4>
+              <ul className="space-y-2 text-sm text-black/60 dark:text-white/60">
                 <li>
-                  <a href="#features" className="hover:text-black transition">
+                  <a href="#features" className="hover:text-black dark:hover:text-white transition">
                     Features
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     Pricing
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     Security
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-black">Company</h4>
-              <ul className="space-y-2 text-sm text-black/60">
+              <h4 className="font-semibold mb-4 text-black dark:text-white">Company</h4>
+              <ul className="space-y-2 text-sm text-black/60 dark:text-white/60">
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     About
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     Blog
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     Careers
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-black">Legal</h4>
-              <ul className="space-y-2 text-sm text-black/60">
+              <h4 className="font-semibold mb-4 text-black dark:text-white">Legal</h4>
+              <ul className="space-y-2 text-sm text-black/60 dark:text-white/60">
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     Privacy
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     Terms
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     Cookies
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-black">Connect</h4>
-              <ul className="space-y-2 text-sm text-black/60">
+              <h4 className="font-semibold mb-4 text-black dark:text-white">Connect</h4>
+              <ul className="space-y-2 text-sm text-black/60 dark:text-white/60">
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     Twitter
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     LinkedIn
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-black transition">
+                  <a href="#" className="hover:text-black dark:hover:text-white transition">
                     Discord
                   </a>
                 </li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-black/5 pt-8 flex flex-col sm:flex-row items-center justify-between text-sm text-black/60">
+          <div className="border-t border-black/5 dark:border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between text-sm text-black/60 dark:text-white/60">
             <p>&copy; 2025 HireAI. All rights reserved.</p>
             <div className="flex items-center gap-4 mt-4 sm:mt-0">
               <span>Made with</span>
@@ -677,10 +699,10 @@ export default function Home() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <svg className="animate-spin h-10 w-10 text-primary mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     );

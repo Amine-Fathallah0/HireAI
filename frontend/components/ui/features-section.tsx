@@ -12,9 +12,9 @@ const Feature = ({ title, description, icon, index }: FeatureProps) => {
   return (
     <div
       className={cn(
-        "flex flex-col lg:border-r py-10 relative group/feature border-black/10",
-        (index === 0 || index === 4) && "lg:border-l border-black/10",
-        index < 4 && "lg:border-b border-black/10"
+        "flex flex-col lg:border-r py-10 relative group/feature border-black/10 dark:border-white/10",
+        (index === 0 || index === 4) && "lg:border-l border-black/10 dark:border-white/10",
+        index < 4 && "lg:border-b border-black/10 dark:border-white/10"
       )}
     >
       {index < 4 && (
@@ -27,12 +27,12 @@ const Feature = ({ title, description, icon, index }: FeatureProps) => {
         {icon}
       </div>
       <div className="text-lg font-bold mb-2 relative z-10 px-10">
-        <div className="absolute left-0 inset-y-0 h-6 group-hover/feature:h-8 w-1 rounded-tr-full rounded-br-full bg-black/10 group-hover/feature:bg-primary transition-all duration-200 origin-center" />
-        <span className="group-hover/feature:translate-x-2 transition duration-200 inline-block text-black">
+        <div className="absolute left-0 inset-y-0 h-6 group-hover/feature:h-8 w-1 rounded-tr-full rounded-br-full bg-black/10 dark:bg-white/10 group-hover/feature:bg-primary transition-all duration-200 origin-center" />
+        <span className="group-hover/feature:translate-x-2 transition duration-200 inline-block text-black dark:text-white">
           {title}
         </span>
       </div>
-      <p className="text-sm text-black/60 max-w-xs relative z-10 px-10">
+      <p className="text-sm text-black/60 dark:text-white/60 max-w-xs relative z-10 px-10">
         {description}
       </p>
     </div>
