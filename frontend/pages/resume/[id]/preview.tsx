@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { Download, ArrowLeft, FileText, Loader2, Calendar, Clock } from 'lucide-react';
+import { Download, ArrowLeft, FileText, Loader2, Calendar, Clock, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useDarkMode } from '@/lib/hooks/useDarkMode';
 import dynamic from 'next/dynamic';
 const HarvardResumeLayout = dynamic(() => import('@/components/resume/HarvardResumeLayout'), { ssr: false });
 import axios from 'axios';
@@ -11,6 +12,7 @@ export default function PreviewResume() {
   const router = useRouter();
   const { id: resumeId } = router.query;
   const { data: session } = useSession();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   
   const [resume, setResume] = useState<any>(null);
   const [versions, setVersions] = useState<any[]>([]);
@@ -20,16 +22,9 @@ export default function PreviewResume() {
   const printRef = useRef<HTMLDivElement>(null);
   const [template, setTemplate] = useState<'raw' | 'harvard'>('harvard');
 
-  useEffect(() => {
-    if (resumeId) {
-      fetchResume();
-      fetchVersions();
-    }
-  }, [resumeId]);
-
   const backend = process.env.NEXT_PUBLIC_RESUME_SERVICE_URL || 'http://localhost:8083';
 
-  const fetchResume = async () => {
+  const fetchResume = useCallback(async () => {
     try {
       // Try to fetch enhanced version first
       const enhancedResponse = await axios.get(
@@ -51,9 +46,9 @@ export default function PreviewResume() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [backend, resumeId, session?.user?.email]);
 
-  const fetchVersions = async () => {
+  const fetchVersions = useCallback(async () => {
     try {
       const response = await axios.get(
         `${backend}/api/resume/${resumeId}/versions`,
@@ -63,7 +58,14 @@ export default function PreviewResume() {
     } catch (err) {
       console.error('Failed to fetch versions:', err);
     }
-  };
+  }, [backend, resumeId, session?.user?.email]);
+
+  useEffect(() => {
+    if (resumeId) {
+      fetchResume();
+      fetchVersions();
+    }
+  }, [resumeId, fetchResume, fetchVersions]);
 
   const handlePrint = () => {
     window.print();
@@ -86,7 +88,7 @@ export default function PreviewResume() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
@@ -94,9 +96,9 @@ export default function PreviewResume() {
 
   if (error || !resume) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Resume not found'}</p>
+          <p className="text-red-600 dark:text-red-400 mb-4">{error || 'Resume not found'}</p>
           <Button onClick={() => router.push('/resume/upload')}>
             Upload New Resume
           </Button>
@@ -106,26 +108,28 @@ export default function PreviewResume() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       {/* Header - Hidden on Print */}
-      <nav className="border-b border-black/5 bg-white shadow-sm print:hidden">
+      <nav className="border-b border-black/5 dark:border-green-500/20 bg-white dark:bg-gray-900/90 shadow-sm print:hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm">
-                HA
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">HireAI</h1>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push(`/resume/${resumeId}/enhance`)}
+              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Edit
+            </Button>
             <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push(`/resume/${resumeId}/enhance`)}
+              <button
+                onClick={toggleDarkMode}
+                className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+                aria-label="Toggle dark mode"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Edit
-              </Button>
+                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               <Button
                 size="sm"
                 onClick={handleDownloadPDF}
@@ -143,11 +147,11 @@ export default function PreviewResume() {
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Template toggle - Hidden on Print */}
         <div className="mb-4 print:hidden">
-          <label className="text-sm text-gray-700 mr-2">Template:</label>
+          <label className="text-sm text-gray-700 dark:text-gray-300 mr-2">Template:</label>
           <select
             value={template}
             onChange={(e) => setTemplate(e.target.value as any)}
-            className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
+            className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-1 text-sm"
             aria-label="Resume template selector"
           >
             <option value="harvard">Harvard (single-page)</option>
@@ -156,16 +160,16 @@ export default function PreviewResume() {
         </div>
         {/* Version Selector - Hidden on Print */}
         {versions.length > 0 && (
-          <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-4 print:hidden">
+          <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 print:hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-gray-400" />
-                <span className="font-medium text-gray-900">Version History</span>
+                <Clock className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <span className="font-medium text-gray-900 dark:text-white">Version History</span>
               </div>
               <select
                 value={selectedVersion}
                 onChange={(e) => setSelectedVersion(Number(e.target.value))}
-                className="border border-gray-300 rounded-lg px-4 py-2 text-sm"
+                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm"
                 aria-label="Select enhanced version"
               >
                 <option value={0}>Latest (Enhanced)</option>
@@ -180,22 +184,22 @@ export default function PreviewResume() {
         )}
 
         {/* Resume Preview */}
-        <div ref={printRef} className="bg-white rounded-xl shadow-lg border border-gray-200 print:shadow-none print:border-none">
+        <div ref={printRef} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 print:shadow-none print:border-none">
           {template === 'harvard' ? (
-            <HarvardResumeLayout resume={resume} profile={{ name: session?.user?.name, email: session?.user?.email }} />
+            <HarvardResumeLayout resume={resume} profile={{ name: session?.user?.name || undefined, email: session?.user?.email || undefined }} />
           ) : (
             <div className="mx-auto max-w-[210mm] min-h-[297mm] p-8 sm:p-12 print:p-16">
               <div className="space-y-6">
                 {resume.sections?.map((section: any, idx: number) => (
                   <div key={idx} className="space-y-4">
                     {section.title && (
-                      <h2 className="text-2xl font-bold text-gray-900 border-b-2 border-primary pb-2">
+                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white border-b-2 border-primary pb-2">
                         {section.title}
                       </h2>
                     )}
                     {section.text && (
                       <div className="prose prose-sm max-w-none">
-                        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-700">
+                        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                           {section.text}
                         </pre>
                       </div>
@@ -204,20 +208,20 @@ export default function PreviewResume() {
                 ))}
                 {(!resume.sections || resume.sections.length === 0) && resume.text && (
                   <div className="prose max-w-none">
-                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-700">
+                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                       {resume.text}
                     </pre>
                   </div>
                 )}
               </div>
-              <div className="mt-12 pt-6 border-t border-gray-200 print:hidden">
-                <div className="flex items-center justify-between text-sm text-gray-500">
+              <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 print:hidden">
+                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     <span>Created: {formatDate(resume.created_at || new Date().toISOString())}</span>
                   </div>
                   {resume.sections?.[0]?.pii_protected && (
-                    <div className="flex items-center gap-2 text-green-600">
+                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                       <FileText className="w-4 h-4" />
                       <span>PII Protected</span>
                     </div>

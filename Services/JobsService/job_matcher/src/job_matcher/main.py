@@ -60,6 +60,9 @@ class JobMatcherFlow(Flow[JobMatcherState]):
         if not firecrawl_api_key:
             raise ValueError("FIRECRAWL_API_KEY not found in environment")
         
+        # Debug: Show which API key is being used (masked for security)
+        print(f"🔑 Using Firecrawl API key: fc-...{firecrawl_api_key[-8:]}")
+        
         # STEP 1: Pre-scrape with Firecrawl BEFORE calling the agent
         print("📡 Calling Firecrawl API...")
         scraper = FirecrawlScrapeWebsiteTool(api_key=firecrawl_api_key)
@@ -124,12 +127,35 @@ class JobMatcherFlow(Flow[JobMatcherState]):
     @listen(scrape_jobs)
     def match_jobs_and_optimize(self):
         """
-     Step 2: Match CV to job and generate resume optimization feedback
+        Step 2: Match CV to job and generate resume optimization feedback
 
         """
         print("\n" + "="*60)
         print("🎯 Analyzing CV-Job match and generating resume feedback...")
         print("="*60)
+        
+        # Log what data we're actually passing to the agent
+        print("\n📋 CV DATA PREVIEW:")
+        if isinstance(self.state.cv_data, dict):
+            cv_skills = self.state.cv_data.get('skills', [])
+            cv_name = self.state.cv_data.get('name', self.state.cv_data.get('personal_info', {}).get('name', 'Unknown'))
+            print(f"  - Candidate: {cv_name}")
+            print(f"  - Skills count: {len(cv_skills) if isinstance(cv_skills, list) else 'N/A'}")
+            print(f"  - Skills preview: {cv_skills[:5] if isinstance(cv_skills, list) else cv_skills}")
+            print(f"  - CV keys: {list(self.state.cv_data.keys())}")
+        else:
+            print(f"  - CV data type: {type(self.state.cv_data)}")
+        
+        print("\n💼 JOB DATA PREVIEW:")
+        if isinstance(self.state.scraped_job, dict):
+            job_title = self.state.scraped_job.get('title', 'Unknown')
+            job_skills = self.state.scraped_job.get('required_skills', [])
+            print(f"  - Job title: {job_title}")
+            print(f"  - Required skills count: {len(job_skills) if isinstance(job_skills, list) else 'N/A'}")
+            print(f"  - Required skills preview: {job_skills[:5] if isinstance(job_skills, list) else job_skills}")
+            print(f"  - Job keys: {list(self.state.scraped_job.keys())}")
+        else:
+            print(f"  - Job data type: {type(self.state.scraped_job)}")
         
         import time
         start_time = time.time()
@@ -238,16 +264,7 @@ def run_with_trigger():
         raise Exception(f"An error occurred while running the flow with trigger: {e}")
 
 
-def test_with_dummy_data():
-    """
-    Test function - requires actual CV data and job URL
-    """
-    # No dummy data - this function is for testing purposes only
-    # In production, CV data comes from the resume service via API
-    raise NotImplementedError(
-        "This is a test function. Use the API endpoint instead. "
-        "CV data should be fetched from the resume service."
-    )
+
     
 
 

@@ -14,23 +14,29 @@ env_path = Path(__file__).parent.parent.parent.parent.parent / '.env'
 
 load_dotenv(dotenv_path=env_path)
 
-api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+# Support both Gemini and Groq API keys
+api_key = os.environ.get("GROQ_API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 
 if not api_key:
     raise ValueError(
-        f"GEMINI_API_KEY not found! Please check your .env file at: {env_path.absolute()}"
+        f"GROQ_API_KEY or GEMINI_API_KEY not found! Please check your .env file at: {env_path.absolute()}"
     )
 
 print(f"✅ Loaded API key from: {env_path.absolute()}")
 print(f"🔑 API Key starts with: {api_key[:10]}...")
 
-# Configure LLM with Gemini - Lower temperature for extraction
-model_name = os.environ.get("MODEL", "gemini/gemini-1.5-flash")
+# Configure LLM - supports both Groq and Gemini
+model_name = os.environ.get("MODEL", "groq/llama-3.3-70b-versatile")
 print(f"📦 Using model: {model_name}")
+
+# Set the appropriate API key environment variable for LiteLLM
+if "groq" in model_name.lower():
+    os.environ["GROQ_API_KEY"] = api_key
+elif "gemini" in model_name.lower():
+    os.environ["GEMINI_API_KEY"] = api_key
 
 llm = LLM(
     model=model_name,
-    api_key=api_key,
     temperature=0.1  # Very low temperature for accurate extraction
 )
 

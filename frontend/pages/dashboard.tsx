@@ -9,6 +9,7 @@ import { QuickActions } from '@/components/dashboard/QuickActions';
 import { RecentResumes } from '@/components/dashboard/RecentResumes';
 import { MatchesPreview } from '@/components/dashboard/MatchesPreview';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
+import InteractiveDots from '@/components/ui/interactive-dots';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 
 export default function DashboardPage() {
@@ -25,8 +26,12 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      {/* Static dotted pattern overlay */}
-      <div className="fixed inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none z-0" />
+      <InteractiveDots 
+      gridSpacing={30}
+      animationSpeed={0.0025}
+      removeWaveLine={true}
+      adaptToTheme={true}
+      />
       
       {/* Hero: Welcome Banner */}
       <div className="relative z-10">

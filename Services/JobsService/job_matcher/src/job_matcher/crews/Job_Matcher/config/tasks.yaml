@@ -1,103 +1,134 @@
 job_scraper_task:
   agent: job_scraper_agent
   description: >
-    You are given ACTUAL scraped content from the job URL: {job_url}
+    CRITICAL: You are given pre-scraped webpage content below. Your job is to extract 
+    job posting information from this EXACT content.
     
-    YOUR ONLY JOB: Extract and structure the information from this pre-scraped content.
-    DO NOT use any tools. DO NOT scrape anything. The content is already provided below.
+    DO NOT use any tools.
+    DO NOT scrape anything.
+    DO NOT make up information.
+    ONLY extract what you can clearly see in the content below.
     
     === SCRAPED CONTENT START ===
     {scraped_content}
     === SCRAPED CONTENT END ===
     
-    Extract these fields from the content above:
-    - Exact job title
-    - Exact company name
-    - Location
-    - Full job description
-    - Requirements/qualifications (as a list)
-    - Responsibilities (as a list)
-    - Required skills (as a list)
-    - Preferred skills (as a list)
-    - Experience level
-    - Salary (if mentioned)
-    - Employment type
+    Read the content above carefully and extract:
+    1. Job title (the EXACT title as written)
+    2. Company name (the EXACT company name)
+    3. Location (city, state, country, or "Remote")
+    4. Complete job description
+    5. ALL requirements/qualifications mentioned
+    6. ALL responsibilities listed
+    7. ALL required technical skills
+    8. ALL preferred/nice-to-have skills
+    9. Experience level (entry/junior/mid/senior/lead)
+    10. Salary/compensation if mentioned
+    11. Employment type (full-time/part-time/contract/etc)
     
-    IMPORTANT: Only extract what you see in the scraped content above. Do NOT invent data.
+    Be thorough - extract ALL skills mentioned, not just a few examples.
     
   expected_output: >
-    Valid JSON with data extracted from the provided content:
+    Return ONLY valid JSON (no markdown, no extra text). Extract REAL values from the scraped content:
     {
-      job_id: "generate-uuid",
-      title: "EXACT title from content",
-      company: "EXACT company from content",
-      location: "location from content",
-      description: "full description",
-      requirements: ["req1", "req2"],
-      qualifications: ["qual1", "qual2"],
-      responsibilities: ["resp1", "resp2"],
-      required_skills: ["skill1", "skill2"],
-      preferred_skills: ["skill1", "skill2"],
-      experience_level: "entry|mid|senior",
-      salary_range: "salary or 'Not specified'",
-      employment_type: "full-time|contract|etc",
-      application_url: "{job_url}",
-      posted_date: "date or 'Not specified'",
-      source_platform: "indeed|linkedin|welcometothejungle|other"
+      "job_id": "UUID",
+      "title": "Extract EXACT job title from content",
+      "company": "Extract EXACT company name from content",
+      "location": "Extract location from content",
+      "description": "Extract full job description text",
+      "requirements": ["Extract ALL requirements as separate items"],
+      "qualifications": ["Extract ALL qualifications"],
+      "responsibilities": ["Extract ALL responsibilities"],
+      "required_skills": ["Extract ALL required technical skills mentioned"],
+      "preferred_skills": ["Extract ALL preferred/nice-to-have skills"],
+      "experience_level": "entry, junior, mid, senior, or lead",
+      "salary_range": "Extract salary if mentioned, otherwise 'Not specified'",
+      "employment_type": "Extract type: full-time, part-time, contract, etc",
+      "application_url": "{job_url}",
+      "posted_date": "Extract date if visible, otherwise 'Not specified'",
+      "source_platform": "indeed, linkedin, glassdoor, or other"
     }
 
 job_matching_task:
   agent: job_matching_agent
   description: >
-    Analyze candidate's CV against the scraped job posting and provide:
-    1. Match score (0-100) with detailed breakdown
-    2. Matching skills from CV
-    3. Missing skills/gaps
-    4. Detailed reasoning for the score
-    5. Resume optimization feedback: specific suggestions on how to tailor 
-       the resume to maximize chances for THIS specific job.
+    You are analyzing a job match between a candidate's CV and a job posting.
+    
+    === ACTUAL CANDIDATE DATA ===
+    {candidate_cv_data}
+    
+    === ACTUAL JOB POSTING ===
+    {scraped_job_details}
+    
+    TASK REQUIREMENTS:
+    1. Calculate match scores based on ONLY the data shown above
+    2. Compare CV skills list with job required_skills list
+    3. Identify which skills appear in BOTH lists (matching_skills)
+    4. Identify which job skills are NOT in the CV (missing_skills)
+    5. Calculate percentage-based scores using the formulas below
+    
+    CALCULATION FORMULAS:
+    - skills_match = (number of matching skills / total required skills) × 100
+    - experience_match = Compare CV experience years/level vs job requirements (0-100)
+    - qualifications_match = Compare CV education/certs vs job requirements (0-100)
+    - culture_fit = Subjective assessment based on CV tone vs job description (0-100)
+    - overall_match_score = (skills_match × 0.4) + (experience_match × 0.3) + (qualifications_match × 0.2) + (culture_fit × 0.1)
+    
+    CRITICAL RULES:
+    - If CV has zero matching skills → matching_skills = []
+    - If CV has all required skills → missing_skills = []
+    - Do NOT invent skills not in the provided data
+    - Do NOT use example values like "Java", "Python", "ABC Corporation"
+    - Use ONLY skills and details from the actual data above
     
   expected_output: >
-    JSON object with comprehensive analysis:
+    Return ONLY a valid JSON object (no markdown, no backticks, no "```json").
+    
+    Structure:
     {
-      overall_match_score: 85,
-      score_breakdown: {
-        skills_match: 90,
-        experience_match: 85,
-        qualifications_match: 80,
-        culture_fit: 85
+      "overall_match_score": <number 0-100>,
+      "score_breakdown": {
+        "skills_match": <number 0-100>,
+        "experience_match": <number 0-100>,
+        "qualifications_match": <number 0-100>,
+        "culture_fit": <number 0-100>
       },
-      matching_skills: [
-        {skill: "Python", candidate_level: "Advanced", required_level: "Intermediate"},
-        {skill: "FastAPI", candidate_level: "Intermediate", required_level: "Intermediate"}
+      "matching_skills": [
+        {
+          "skill": "<actual skill name from BOTH CV and job>",
+          "candidate_level": "<level from CV>",
+          "required_level": "<level from job>"
+        }
       ],
-      missing_skills: [
-        {skill: "Kubernetes", importance: "required", impact_on_score: -5},
-        {skill: "AWS", importance: "preferred", impact_on_score: -3}
+      "missing_skills": [
+        {
+          "skill": "<actual skill from job NOT in CV>",
+          "importance": "required or preferred",
+          "impact_on_score": <negative number>
+        }
       ],
-      detailed_reasoning: "Candidate shows strong backend development skills...",
-      resume_optimization: {
-        strengths_to_highlight: ["Emphasize Python and FastAPI experience in summary"],
-        keywords_to_add: ["Kubernetes", "AWS", "CI/CD", "Docker"],
-        sections_to_improve: {
-          summary: "Add cloud infrastructure keywords",
-          experience: "Quantify achievements with metrics (e.g., 'Reduced API latency by 40%')",
-          skills: "Group skills by category: Backend, DevOps, Cloud"
+      "detailed_reasoning": "<explain the match score using actual data points>",
+      "resume_optimization": {
+        "strengths_to_highlight": ["<actual strengths from CV that match job>"],
+        "keywords_to_add": ["<actual keywords from job missing in CV>"],
+        "sections_to_improve": {
+          "summary": "<specific advice based on actual CV summary>",
+          "experience": "<specific advice based on actual CV experience>",
+          "skills": "<specific advice based on actual CV skills>"
         },
-        phrases_to_include: [
-          "Experienced in microservices architecture",
-          "Strong background in cloud-native development"
-        ],
-        formatting_suggestions: [
-          "Move technical skills section higher",
-          "Add a 'Relevant Projects' section highlighting Docker/Kubernetes work"
-        ],
-        ats_optimization: [
-          "Include exact keywords from job description: 'RESTful APIs', 'PostgreSQL', 'Agile'",
-          "Use standard section headers: 'Professional Experience' instead of 'Work History'"
-        ]
+        "phrases_to_include": ["<actual phrases from job description>"],
+        "formatting_suggestions": ["<specific improvements for actual CV format>"],
+        "ats_optimization": ["<actual keywords from job posting for ATS>"]
       }
     }
+    
+    VALIDATION:
+    - Every skill in matching_skills MUST exist in both candidate_cv_data.skills AND scraped_job_details.required_skills
+    - Every skill in missing_skills MUST exist in scraped_job_details.required_skills but NOT in candidate_cv_data.skills
+    - All advice MUST reference actual content from the provided data
+    
+  context:
+    - job_extraction_task
   input:
     - candidate_cv_data
     - scraped_job_details

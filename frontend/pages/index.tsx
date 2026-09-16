@@ -9,6 +9,7 @@ import { PixelatedCanvas } from '@/components/ui/pixelated-canvas';
 import { FeaturesSection } from '@/components/ui/features-section';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useDarkMode } from '@/lib/hooks/useDarkMode';
+import InteractiveDots from '@/components/ui/interactive-dots';
 import Image from 'next/image';
 
 // Landing Page Component (shown when not authenticated)
@@ -37,7 +38,13 @@ function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 text-foreground dark:text-white overflow-hidden relative transition-colors duration-200">
-      <div className="absolute inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none" />
+      {/* Interactive Dots Background */}
+      <InteractiveDots
+        gridSpacing={30}
+        animationSpeed={0.0025}
+        removeWaveLine={true}
+        adaptToTheme={true}
+      />
 
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 border-b border-black/5 dark:border-white/10 backdrop-blur-md bg-white/80 dark:bg-gray-900/80">

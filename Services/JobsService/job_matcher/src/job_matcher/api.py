@@ -105,6 +105,10 @@ async def fetch_cv_from_resume_service(user_id: str) -> Dict:
     Raises:
         HTTPException: If resume service is unavailable or CV not found
     """
+    logger.info(f"🔍 Attempting to fetch CV for user: {user_id}")
+    logger.info(f"📡 Resume service URL: {RESUME_SERVICE_URL}")
+    logger.info(f"✅ Resume service enabled: {RESUME_SERVICE_ENABLED}")
+    
     if not RESUME_SERVICE_ENABLED:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -119,12 +123,18 @@ async def fetch_cv_from_resume_service(user_id: str) -> Dict:
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             # Call the new cv-data endpoint that returns job-matcher compatible format
+            url = f"{RESUME_SERVICE_URL}/api/resume/user/{user_id}/latest-cv"
+            logger.info(f"📞 Calling resume service endpoint: {url}")
+            
             response = await client.get(
-                f"{RESUME_SERVICE_URL}/api/resume/user/{user_id}/latest-cv",
+                url,
                 params={"use_enhanced": True}  # Use enhanced version if available
             )
             
+            logger.info(f"📬 Resume service response status: {response.status_code}")
+            
             if response.status_code == 404:
+                logger.warning(f"⚠️  No resume found for user: {user_id}")
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"No resume found for user_id: {user_id}. Please upload a resume first."
@@ -134,7 +144,16 @@ async def fetch_cv_from_resume_service(user_id: str) -> Dict:
             data = response.json()
             cv_data = data.get("cv_data")
             
-            logger.info(f"✅ Fetched CV for user {user_id} from resume service (enhanced: {data.get('enhanced', False)})")
+            if not cv_data:
+                logger.error(f"❌ CV data is empty in response for user: {user_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Resume service returned empty CV data"
+                )
+            
+            logger.info(f"✅ Successfully fetched CV for user {user_id} from resume service")
+            logger.info(f"📋 Enhanced version: {data.get('enhanced', False)}")
+            logger.info(f"📄 CV data keys: {list(cv_data.keys()) if isinstance(cv_data, dict) else 'not a dict'}")
             return cv_data
             
     except httpx.TimeoutException:
@@ -244,7 +263,7 @@ def process_job_match(request_id: str, user_id: str, job_url: str, cv_data: Dict
         
         # Create trigger payload for CrewAI Flow
         trigger_payload = {
-            "cv_data": cv_data,
+            "candidate_cv_data": cv_data,
             "candidate_id": user_id,
             "job_url": job_url
         }

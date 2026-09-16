@@ -1,14 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { Wand2, Edit3, Eye, Loader2, Sparkles, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Wand2, Edit3, Eye, Loader2, Sparkles, AlertCircle, CheckCircle2, ArrowLeft, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useDarkMode } from '@/lib/hooks/useDarkMode';
 import axios from 'axios';
+import InteractiveDots from '@/components/ui/interactive-dots';
 
 export default function EnhanceResume() {
   const router = useRouter();
   const { id: resumeId } = router.query;
   const { data: session } = useSession();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   
   const [resume, setResume] = useState<any>(null);
   const [enhanced, setEnhanced] = useState<any>(null);
@@ -151,43 +154,50 @@ export default function EnhanceResume() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center" style={{ backgroundImage: 'radial-gradient(#00000030 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+      <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex items-center justify-center" style={{ backgroundImage: 'radial-gradient(#00000030 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50/30 via-white to-green-50/20 relative">
-      {/* Static dotted pattern overlay */}
-      <div className="fixed inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none z-0" />
+    <div className="min-h-screen bg-gradient-to-b from-green-50/30 via-white to-green-50/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 relative">
+     <InteractiveDots 
+           gridSpacing={30}
+           animationSpeed={0.0025}
+           removeWaveLine={true}
+           adaptToTheme={true}
+           />
       {/* Header */}
-      <nav className="relative z-10 bg-white/90 backdrop-blur-md border-b border-green-500/10 shadow-sm z-50">
+      <nav className="relative z-10 bg-white dark:bg-gray-800 border-b border-black/5 dark:border-white/10 shadow-sm z-50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-20 items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => router.push('/dashboard')}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Dashboard
               </Button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm">
-                  HA
-                </div>
-                <h1 className="text-xl font-bold text-gray-900">Resume Enhancer</h1>
-              </div>
+              <div className="h-px w-px bg-gray-300 dark:bg-gray-600 mx-2" />
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Resume Enhancer</h1>
             </div>
             <div className="flex items-center gap-4">
+              <button
+                onClick={toggleDarkMode}
+                className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               {usage && (
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                   {usage.daily && (
                     <div className="flex flex-col items-end">
-                      <span className="text-xs text-gray-500">Daily</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Daily</span>
                       <span>
                         <span className="font-medium text-primary">{usage.daily.remaining}</span>
                         <span className="text-gray-400">/{usage.daily.limit}</span>
@@ -216,9 +226,9 @@ export default function EnhanceResume() {
 
       {/* Main Content */}
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Enhance Your Resume</h2>
-          <p className="text-gray-600">
+        <div className="mb-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Enhance Your Resume</h2>
+          <p className="text-gray-600 dark:text-gray-400">
             Choose to edit manually or let our AI agents enhance it for you
           </p>
         </div>
@@ -241,11 +251,11 @@ export default function EnhanceResume() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Original Resume */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border-2 border-green-500/20 p-6 hover:shadow-xl hover:border-green-500/40 transition-all relative overflow-hidden">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg border-2 border-green-500/20 dark:border-green-500/30 p-6 hover:shadow-xl hover:border-green-500/40 dark:hover:border-green-500/50 transition-all relative overflow-hidden">
             {/* Gradient top border */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-green-600" />
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Original Resume</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Original Resume</h3>
               <Button
                 variant="outline"
                 size="sm"
@@ -260,27 +270,27 @@ export default function EnhanceResume() {
               <textarea
                 value={editedText}
                 onChange={(e) => setEditedText(e.target.value)}
-                className="w-full h-96 p-4 border border-gray-300 rounded-lg font-mono text-sm"
+                className="w-full h-96 p-4 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg font-mono text-sm"
                 aria-label="Edit resume text"
                 placeholder="Edit resume text here"
                 title="Edit resume text"
               />
             ) : (
               <div className="prose prose-sm max-w-none">
-                <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700">
+                <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 dark:text-gray-300">
                   {resume?.text}
                 </pre>
-                <div className="mt-2 text-xs text-gray-400">Backend: {backend}</div>
+                <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">Backend: {backend}</div>
               </div>
             )}
           </div>
 
           {/* AI Suggestions / Enhanced Version */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border-2 border-green-500/20 p-6 hover:shadow-xl hover:border-green-500/40 transition-all relative overflow-hidden">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg border-2 border-green-500/20 dark:border-green-500/30 p-6 hover:shadow-xl hover:border-green-500/40 dark:hover:border-green-500/50 transition-all relative overflow-hidden">
             {/* Gradient top border */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-green-600" />
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {enhanced ? 'AI Enhanced Version' : 'AI Suggestions'}
               </h3>
               {enhanced && (
@@ -295,22 +305,22 @@ export default function EnhanceResume() {
               <div className="space-y-6">
                 {/* Enhanced Text */}
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Final Enhanced Version:</h4>
-                  <div className="prose prose-sm max-w-none bg-gray-50 rounded-lg p-4">
-                    <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Final Enhanced Version:</h4>
+                  <div className="prose prose-sm max-w-none bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 dark:text-gray-300">
                       {enhanced.sections[0]?.text}
                     </pre>
-                    <div className="mt-2 text-xs text-gray-400">Backend: {backend}</div>
+                    <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">Backend: {backend}</div>
                   </div>
                 </div>
 
                 {/* Suggestions from Agents */}
                 {enhanced.sections[0]?.suggestions && enhanced.sections[0].suggestions.length > 0 && (
-                  <div className="border-t border-gray-200 pt-4">
-                    <h4 className="font-semibold text-gray-900 mb-3">Key Suggestions (from all agents):</h4>
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Key Suggestions (from all agents):</h4>
                     <ul className="space-y-2">
                       {enhanced.sections[0].suggestions.map((suggestion: string, idx: number) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
                           <Sparkles className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                           <span>{suggestion}</span>
                         </li>
@@ -321,21 +331,21 @@ export default function EnhanceResume() {
 
                 {/* Individual Agent Outputs */}
                 {enhanced.sections[0]?.agent_outputs && (
-                  <div className="border-t border-gray-200 pt-4">
-                    <h4 className="font-semibold text-gray-900 mb-3">Individual Agent Analysis:</h4>
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Individual Agent Analysis:</h4>
                     
                     {/* Resume Writer */}
                     {enhanced.sections[0].agent_outputs.resume_writer && (
-                      <details className="mb-3 border border-gray-200 rounded-lg">
-                        <summary className="cursor-pointer p-3 bg-gray-50 rounded-lg font-medium text-gray-900 hover:bg-gray-100">
+                      <details className="mb-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <summary className="cursor-pointer p-3 bg-gray-50 dark:bg-gray-700 rounded-lg font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600">
                           📝 Resume Writer ({(enhanced.sections[0].agent_outputs.resume_writer.confidence * 100).toFixed(0)}% confidence)
                         </summary>
                         <div className="p-3 space-y-2">
-                          <p className="text-sm text-gray-700">{enhanced.sections[0].agent_outputs.resume_writer.text}</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">{enhanced.sections[0].agent_outputs.resume_writer.text}</p>
                           {enhanced.sections[0].agent_outputs.resume_writer.suggestions?.length > 0 && (
                             <div className="mt-2">
-                              <p className="text-xs font-semibold text-gray-600 mb-1">Suggestions:</p>
-                              <ul className="list-disc list-inside text-xs text-gray-600 space-y-1">
+                              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Suggestions:</p>
+                              <ul className="list-disc list-inside text-xs text-gray-600 dark:text-gray-400 space-y-1">
                                 {enhanced.sections[0].agent_outputs.resume_writer.suggestions.map((s: string, i: number) => (
                                   <li key={i}>{s}</li>
                                 ))}
@@ -348,16 +358,16 @@ export default function EnhanceResume() {
 
                     {/* ATS Optimizer */}
                     {enhanced.sections[0].agent_outputs.ats_optimizer && (
-                      <details className="mb-3 border border-gray-200 rounded-lg">
-                        <summary className="cursor-pointer p-3 bg-gray-50 rounded-lg font-medium text-gray-900 hover:bg-gray-100">
+                      <details className="mb-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <summary className="cursor-pointer p-3 bg-gray-50 dark:bg-gray-700 rounded-lg font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600">
                           🎯 ATS Optimizer ({(enhanced.sections[0].agent_outputs.ats_optimizer.confidence * 100).toFixed(0)}% confidence)
                         </summary>
                         <div className="p-3 space-y-2">
-                          <p className="text-sm text-gray-700">{enhanced.sections[0].agent_outputs.ats_optimizer.text}</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">{enhanced.sections[0].agent_outputs.ats_optimizer.text}</p>
                           {enhanced.sections[0].agent_outputs.ats_optimizer.suggestions?.length > 0 && (
                             <div className="mt-2">
-                              <p className="text-xs font-semibold text-gray-600 mb-1">Suggestions:</p>
-                              <ul className="list-disc list-inside text-xs text-gray-600 space-y-1">
+                              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Suggestions:</p>
+                              <ul className="list-disc list-inside text-xs text-gray-600 dark:text-gray-400 space-y-1">
                                 {enhanced.sections[0].agent_outputs.ats_optimizer.suggestions.map((s: string, i: number) => (
                                   <li key={i}>{s}</li>
                                 ))}
@@ -370,16 +380,16 @@ export default function EnhanceResume() {
 
                     {/* Industry Expert */}
                     {enhanced.sections[0].agent_outputs.industry_expert && (
-                      <details className="mb-3 border border-gray-200 rounded-lg">
-                        <summary className="cursor-pointer p-3 bg-gray-50 rounded-lg font-medium text-gray-900 hover:bg-gray-100">
+                      <details className="mb-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <summary className="cursor-pointer p-3 bg-gray-50 dark:bg-gray-700 rounded-lg font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600">
                           💼 Industry Expert ({(enhanced.sections[0].agent_outputs.industry_expert.confidence * 100).toFixed(0)}% confidence)
                         </summary>
                         <div className="p-3 space-y-2">
-                          <p className="text-sm text-gray-700">{enhanced.sections[0].agent_outputs.industry_expert.text}</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">{enhanced.sections[0].agent_outputs.industry_expert.text}</p>
                           {enhanced.sections[0].agent_outputs.industry_expert.suggestions?.length > 0 && (
                             <div className="mt-2">
-                              <p className="text-xs font-semibold text-gray-600 mb-1">Suggestions:</p>
-                              <ul className="list-disc list-inside text-xs text-gray-600 space-y-1">
+                              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Suggestions:</p>
+                              <ul className="list-disc list-inside text-xs text-gray-600 dark:text-gray-400 space-y-1">
                                 {enhanced.sections[0].agent_outputs.industry_expert.suggestions.map((s: string, i: number) => (
                                   <li key={i}>{s}</li>
                                 ))}
@@ -394,11 +404,11 @@ export default function EnhanceResume() {
 
                 {/* Overall Confidence */}
                 {enhanced.sections[0]?.confidence && (
-                  <div className="border-t border-gray-200 pt-4">
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Overall Confidence:</span>
+                      <span className="text-gray-600 dark:text-gray-400">Overall Confidence:</span>
                       <div className="flex items-center gap-2">
-                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                        <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                           <div
                             className="bg-primary h-2 rounded-full transition-all"
                             title={`Confidence ${(enhanced.sections[0].confidence * 100).toFixed(0)}%`}
@@ -414,8 +424,8 @@ export default function EnhanceResume() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <Wand2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 mb-6">
+                <Wand2 className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
                   No AI enhancement yet. Click the button below to get AI-powered suggestions.
                 </p>
                 <Button

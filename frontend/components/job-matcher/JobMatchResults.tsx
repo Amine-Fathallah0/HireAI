@@ -92,14 +92,6 @@ export function JobMatchResults({ result, jobUrl, onReset }: JobMatchResultsProp
                 Match Analysis <span className="text-green-600 dark:text-green-400">Complete</span>
               </h2>
             </div>
-            {jobData.title && (
-              <div className="space-y-1">
-                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">{jobData.title}</h3>
-                {jobData.company && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">at {jobData.company}</p>
-                )}
-              </div>
-            )}
             <a 
               href={jobUrl} 
               target="_blank" 

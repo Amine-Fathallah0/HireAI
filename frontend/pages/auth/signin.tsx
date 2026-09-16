@@ -9,6 +9,7 @@ import { ArrowRight, Sparkles, Mail, Lock, User, CheckCircle2, Moon, Sun } from 
 import { Button } from '@/components/ui/button';
 import { useDarkMode } from '@/lib/hooks/useDarkMode';
 import Image from 'next/image';
+import InteractiveDots from '@/components/ui/interactive-dots';
 
 export default function SignIn() {
   const router = useRouter();
@@ -143,8 +144,13 @@ export default function SignIn() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 relative overflow-hidden transition-colors duration-200">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none z-0" />
+      {/* Interactive Dots Background */}
+      <InteractiveDots
+        gridSpacing={30}
+        animationSpeed={0.0025}
+        removeWaveLine={true}
+        adaptToTheme={true}
+      />
       
       {/* Animated Background Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -445,7 +451,7 @@ export default function SignIn() {
             onClick={handleGoogleSignIn}
             variant="outline"
             size="lg"
-            className="w-full border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white"
+            className="w-full border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-white/10 bg-white dark:bg-white text-gray-700 dark:text-gray-700"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

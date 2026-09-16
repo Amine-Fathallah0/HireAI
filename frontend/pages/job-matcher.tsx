@@ -19,66 +19,8 @@ import { Button } from '@/components/ui/button';
 import { JobMatchResults } from '@/components/job-matcher/JobMatchResults';
 import { ResumeUpload } from '@/components/job-matcher/ResumeUpload';
 import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
+import InteractiveDots from '@/components/ui/interactive-dots';
 
-// Mock CV data (simulating previously uploaded CV)
-const MOCK_CV_DATA = {
-  personal_info: {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1-555-0123",
-    location: "New York, NY"
-  },
-  summary: "Experienced Python developer with 5 years of backend development expertise. Strong skills in FastAPI, Django, and microservices architecture. Passionate about building scalable APIs and distributed systems.",
-  skills: [
-    "Python",
-    "FastAPI",
-    "Django",
-    "Docker",
-    "PostgreSQL",
-    "Redis",
-    "REST APIs",
-    "Microservices",
-    "Git",
-    "AWS"
-  ],
-  experience: [
-    {
-      title: "Backend Developer",
-      company: "Tech Solutions Inc",
-      duration: "2021-2024",
-      description: "Built and maintained REST APIs using FastAPI. Designed microservices architecture for e-commerce platform.",
-      key_achievements: [
-        "Led migration from monolith to microservices",
-        "Reduced API response time by 40%",
-        "Mentored 3 junior developers"
-      ]
-    },
-    {
-      title: "Junior Python Developer",
-      company: "StartupXYZ",
-      duration: "2019-2021",
-      description: "Developed backend features for SaaS platform using Django.",
-      key_achievements: [
-        "Integrated Stripe payment gateway",
-        "Built user authentication system"
-      ]
-    }
-  ],
-  education: [
-    {
-      degree: "Bachelor of Science in Computer Science",
-      institution: "University of Technology",
-      graduation_year: 2019,
-      field_of_study: "Computer Science"
-    }
-  ],
-  certifications: [
-    "AWS Certified Developer - Associate",
-    "Python Professional Certificate"
-  ],
-  languages: ["English", "Spanish"],
-  experience_level: "mid"
-};
 
 export default function JobMatcherPage() {
   const router = useRouter();
@@ -229,8 +171,13 @@ export default function JobMatcherPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50/30 via-white to-green-50/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 relative">
-      {/* Static dotted pattern overlay */}
-      <div className="fixed inset-0 bg-[radial-gradient(#00000030_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff20_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none" />
+      {/* Interactive Dots Background */}
+      <InteractiveDots
+        gridSpacing={30}
+        animationSpeed={0.0025}
+        removeWaveLine={true}
+        adaptToTheme={true}
+      />
       
       {/* Header */}
       <header className="relative z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-green-500/10 dark:border-green-500/20 shadow-sm">
@@ -336,16 +283,9 @@ export default function JobMatcherPage() {
                         <div className="font-semibold text-lg">
                           {usingCurrentCV ? 'Using Current CV ✓' : 'Use Current CV'}
                         </div>
-                        {usingCurrentCV && (
-                          <p className="text-xs mt-0.5 text-green-600/80 dark:text-green-400/80">
-                            John Doe - Backend Developer (5 years exp.)
-                          </p>
-                        )}
-                        {!usingCurrentCV && (
-                          <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
-                            Use your existing resume from the platform
-                          </p>
-                        )}
+                        <p className="text-xs mt-0.5 text-gray-500 dark:text-gray-400">
+                          {usingCurrentCV ? 'Using your latest resume from the platform' : 'Use your existing resume from the platform'}
+                        </p>
                       </div>
                     </div>
                     {usingCurrentCV && (
