@@ -1,931 +1,488 @@
-# 🚀 AI-Powered Career Platform - Microservices Architecture
+# HireAI
 
-> **An intelligent career platform leveraging AI to enhance resumes, match job opportunities, and provide personalized career insights.**
+AI-powered career platform built as a microservices system: upload a resume, have it parsed and enhanced by an LLM, then match it against a live job posting and get a scored, gap-aware report.
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
+Built for the TSYP 13 CS Challenge.
+
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688.svg)](https://fastapi.tiangolo.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Python%203.11%2B-009688.svg)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## 📋 Table of Contents
+## Contents
 
-- [Overview](#-overview)
-- [System Architecture](#-system-architecture)
-- [Tech Stack](#-tech-stack)
-- [Features Implemented](#-features-implemented)
-- [Prerequisites](#-prerequisites)
-- [Quick Start](#-quick-start)
-- [Development Setup](#-development-setup)
-- [Testing](#-testing)
-- [API Documentation](#-api-documentation)
-- [Deployment](#-deployment)
-- [Contributing](#-contributing)
-- [Troubleshooting](#-troubleshooting)
-
----
-
-## 🎯 Overview
-
-The AI-Powered Career Platform is a **microservices-based** application designed to help job seekers create professional resumes with AI assistance, find matching job opportunities, and receive personalized career insights. The platform emphasizes **security**, **privacy (GDPR compliance)**, and **scalability**.
-
-### Key Highlights
-
-- 🔐 **Enterprise Security**: JWT authentication, Keycloak integration, OAuth2 flows
-- 🛡️ **Rate Limiting**: Redis-backed rate limiting (5-10 req/sec) to protect resources
-- 🔄 **Compensation Pattern**: Automatic rollback handling for distributed transactions
-- 🚪 **API Gateway**: Spring Cloud Gateway with circuit breakers and fallback mechanisms
-- 📊 **Monitoring**: Comprehensive audit logging and health checks
-- 🌐 **CORS Handling**: Proper cross-origin configuration for frontend-backend communication
+- [What it does](#what-it-does)
+- [Architecture](#architecture)
+- [Services and ports](#services-and-ports)
+- [Tech stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Quick start](#quick-start)
+- [Environment variables](#environment-variables)
+- [Running services individually](#running-services-individually)
+- [API reference](#api-reference)
+- [Rate limiting](#rate-limiting)
+- [Repository layout](#repository-layout)
+- [Troubleshooting](#troubleshooting)
+- [Known gaps](#known-gaps)
 
 ---
 
-## 🏗️ System Architecture
+## What it does
 
-### Current Implementation (✅ Completed)
+Three user-facing flows, each backed by its own service:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         FRONTEND                                 │
-│                    Next.js 14 (React 18)                         │
-│  - Custom Sign In/Sign Up Forms                                 │
-│  - Session Management (NextAuth.js)                             │
-│  - Profile Dashboard                                             │
-│  - Real-time Error Handling                                     │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓ HTTP/HTTPS
-┌─────────────────────────────────────────────────────────────────┐
-│                      API GATEWAY (Port 8090)                     │
-│                  Spring Cloud Gateway 4.1.0                      │
-│  ✅ Request Routing (Path-based)                                │
-│  ✅ Rate Limiting (Redis-backed)                                │
-│  ✅ Circuit Breaker (Resilience4j)                              │
-│  ✅ CORS Configuration                                          │
-│  ✅ Health Checks & Monitoring                                  │
-└─────────────────────────────────────────────────────────────────┘
-            ↓                    ↓                    ↓
-┌─────────────────┐  ┌──────────────────────┐  ┌──────────────────┐
-│  USER SERVICE   │  │   RESUME SERVICE     │  │   JOBS SERVICE   │
-│ (Spring Boot)   │  │   (FastAPI/Python)   │  │ (FastAPI/Python) │
-│  ✅ Port 8081   │  │   📅 Coming Soon     │  │   📅 Coming Soon │
-│                 │  │                      │  │                  │
-│ ✅ User CRUD    │  │ 📋 Resume CRUD       │  │ 🔍 Job Listings  │
-│ ✅ JWT Auth     │  │ 📄 PDF Upload/Parse  │  │ 🎯 Job Matching  │
-│ ✅ Keycloak     │  │ 🤖 AI Enhancement    │  │ 🤖 CrewAI Agents │
-│ ✅ Registration │  │    (Groq API)        │  │ 💡 Career Insight│
-│ ✅ Email Verify │  │ 📊 ATS Scoring       │  │                  │
-│ ✅ GDPR Ready   │  │ 📝 Real-time Feedback│  │                  │
-│ ✅ Audit Logs   │  │                      │  │                  │
-│ ✅ Cleanup Jobs │  │                      │  │                  │
-└─────────────────┘  └──────────────────────┘  └──────────────────┘
-         ↓                      ↓                        ↓
-┌─────────────────┐  ┌──────────────────────┐  ┌──────────────────┐
-│   PostgreSQL    │  │      MongoDB         │  │     MongoDB      │
-│   (Port 5432)   │  │   (Port 27017)       │  │  (Port 27018)    │
-│   ✅ Running    │  │   📅 Coming Soon     │  │  📅 Coming Soon  │
-│                 │  │                      │  │                  │
-│ Tables:         │  │ Collections:         │  │ Collections:     │
-│ ✅ users        │  │ - resumes            │  │ - jobs           │
-│ ✅ user_tokens  │  │ - ai_analysis        │  │ - job_matches    │
-│ ✅ audit_logs   │  │ - resume_versions    │  │ - master_skills  │
-└─────────────────┘  └──────────────────────┘  └──────────────────┘
+1. **Account & profile** — registration and login through Keycloak, profile management, GDPR data export/delete, and audit logging. Handled by the Spring Boot **user service**.
+2. **Resume upload & enhancement** — a PDF is uploaded, parsed with PyMuPDF, structured by Groq (`llama-3.3-70b-versatile`), scored for ATS fit, and versioned in MongoDB. Handled by the FastAPI **ai-resume-enhancer**.
+3. **Job matching** — given a job posting URL, Firecrawl scrapes the page, a CrewAI flow extracts the structured job spec, and a matching agent compares it against the candidate's stored CV to produce a match score, missing skills, ATS keywords, and resume optimization advice. The recommendations are pushed back to the resume service. Handled by the FastAPI **job-matcher**.
 
-┌─────────────────────────────────────────────────────────────────┐
-│                    SUPPORTING SERVICES                           │
-├─────────────────────────────────────────────────────────────────┤
-│  ✅ Keycloak (Port 8080) - Identity & Access Management         │
-│  ✅ Redis (Port 6379) - Rate Limiting & Caching                 │
-│  ✅ MongoDB (Port 27017) - Resume Data (Coming Soon)            │
-│  ✅ PgAdmin (Port 5050) - PostgreSQL Admin UI                   │
-│  ✅ Mongo Express (Port 8082) - MongoDB Admin UI (Coming Soon)  │
-└─────────────────────────────────────────────────────────────────┘
-```
+Everything is fronted by a Spring Cloud Gateway that handles routing, Redis-backed rate limiting, circuit breaking, and CORS.
 
-### Architecture Diagram
-
-![Architecture Diagram](docs/architecture-diagram.png)
-
-> **Generate this diagram using [Eraser.io](https://app.eraser.io/) with the prompt below** 👇
-
-<details>
-<summary><b>📐 Click to view Eraser.io Prompt</b></summary>
+## Architecture
 
 ```
-Create a professional microservices architecture diagram for an AI-Powered Career Platform with the following components:
+                        ┌────────────────────────────┐
+                        │  Frontend — Next.js 14     │
+                        │  NextAuth + Keycloak       │
+                        │  localhost:3000            │
+                        └──────────────┬─────────────┘
+                                       │
+                        ┌──────────────▼─────────────┐
+                        │  API Gateway :8090         │
+                        │  Spring Cloud Gateway      │
+                        │  routing · rate limit ·    │
+                        │  circuit breaker · CORS    │
+                        └──┬─────────┬─────────────┬─┘
+                           │         │             │
+        /api/v1/auth/**    │         │             │  /api/v1/jobs/**
+        /api/v1/users/**   │         │             │
+        /api/v1/profile/** │         │ /api/v1/resumes/**
+                           │         │             │
+        ┌──────────────────▼──┐ ┌────▼───────────┐ ┌▼───────────────────┐
+        │  user-service :8081 │ │ ai-resume-     │ │ job-matcher :8010  │
+        │  Spring Boot 3.5    │ │ enhancer :8083 │ │ FastAPI + CrewAI   │
+        │                     │ │ FastAPI        │ │                    │
+        │  · auth / register  │ │ · PDF parse    │ │ · Firecrawl scrape │
+        │  · profile CRUD     │ │ · Groq enhance │ │ · job extraction   │
+        │  · GDPR export/del  │ │ · ATS scoring  │ │ · CV/job matching  │
+        │  · audit logs       │ │ · versioning   │ │ · recommendations  │
+        │  · Keycloak sync    │ │ · tier quotas  │ │                    │
+        └──────────┬──────────┘ └────┬───────────┘ └─┬──────────────────┘
+                   │                 │               │
+                   │                 │   CV fetch ◄──┤
+                   │                 └──► recommendations push
+                   │                 │               │
+        ┌──────────▼──────────┐ ┌────▼───────────────▼───┐ ┌──────────────┐
+        │  PostgreSQL :5432   │ │  MongoDB :27017        │ │ Redis :6379  │
+        │  user_db, keycloak  │ │  resume_db,            │ │ rate limits  │
+        │                     │ │  job_matcher_db        │ │ + quotas     │
+        └─────────────────────┘ └────────────────────────┘ └──────────────┘
 
-FRONTEND LAYER (Top):
-- Next.js 14 Application (React 18)
-- Components: Custom Sign In/Up Forms, Session Management (NextAuth.js), Profile Dashboard
-- Port: 3000
-- Color: Blue gradient
-
-API GATEWAY LAYER (Middle-Top):
-- Spring Cloud Gateway
-- Features: Request Routing, Rate Limiting (Redis-backed), Circuit Breaker (Resilience4j), CORS, Health Checks
-- Port: 8090
-- Color: Green
-
-MICROSERVICES LAYER (Middle):
-1. User Service (Spring Boot 3.2)
-   - Port: 8081
-   - Features: User CRUD, JWT Auth, Keycloak Integration, Registration, Email Verification, GDPR Endpoints, Audit Logging
-   - Status: Implemented ✓
-   - Color: Orange
-
-2. Resume Service (FastAPI/Python)
-   - Port: 8082 (planned)
-   - Features: Resume CRUD, PDF Upload/Parse, AI Enhancement (Groq API), ATS Scoring, Real-time Feedback
-   - Status: Coming Soon
-   - Color: Purple (dashed border)
-
-3. Jobs Service (FastAPI/Python)
-   - Port: 8083 (planned)
-   - Features: Job Listings, Job Matching, CrewAI Agents, Career Insights
-   - Status: Coming Soon
-   - Color: Teal (dashed border)
-
-DATABASE LAYER (Bottom):
-1. PostgreSQL (Port 5432)
-   - Tables: users, user_tokens, audit_logs
-   - Connected to: User Service
-   - Status: Implemented ✓
-   - Color: Blue
-
-2. MongoDB (Port 27017)
-   - Collections: resumes, ai_analysis, resume_versions
-   - Connected to: Resume Service
-   - Status: Planned
-   - Color: Green (dashed border)
-
-3. MongoDB (Port 27018)
-   - Collections: jobs, job_matches, master_skills
-   - Connected to: Jobs Service
-   - Status: Planned
-   - Color: Green (dashed border)
-
-SUPPORTING SERVICES (Side Panel):
-- Keycloak (Port 8080) - Identity Management - Implemented ✓
-- Redis (Port 6379) - Rate Limiting & Caching - Implemented ✓
-- PgAdmin (Port 5050) - PostgreSQL UI - Implemented ✓
-- Mongo Express (Port 8082) - MongoDB UI - Planned
-
-SECURITY LAYER (Overlay/Annotations):
-- HTTPS/TLS everywhere
-- JWT Token Flow (Frontend → Gateway → Services)
-- Rate Limiting: 5 req/sec (Auth), 10 req/sec (User Management)
-- CORS: localhost:3000 allowed
-- Circuit Breaker: Fallback endpoints configured
-
-DATA FLOWS (Arrows):
-1. User Registration Flow: Frontend → Gateway → User Service → Keycloak → PostgreSQL
-2. AI Enhancement Flow (future): Frontend → Gateway → Resume Service → Groq API → MongoDB
-3. Job Matching Flow (future): Frontend → Gateway → Jobs Service → CrewAI → MongoDB
-
-ANNOTATIONS:
-- Show token bucket algorithm for rate limiting
-- Indicate compensation pattern for distributed transactions
-- Mark GDPR compliance endpoints
-- Highlight audit logging flow
-
-STYLE:
-- Modern, clean design
-- Use icons for services (Docker, Spring Boot, Next.js, FastAPI, PostgreSQL, MongoDB, Redis, Keycloak)
-- Color-coded by implementation status (green for implemented, gray/dashed for planned)
-- Show port numbers clearly
-- Include security badges (JWT, OAuth2, HTTPS)
+   Supporting: Keycloak :8080 (realm Tsyp13CS) · PgAdmin :5050 · Mongo Express :8082
 ```
 
-</details>
+### Job matching sequence
 
----
+```
+Frontend ──► Gateway ──► job-matcher  POST /api/v1/jobs/match  { user_id, job_url }
+                              │
+                              ├──► ai-resume-enhancer  GET /api/resume/user/{id}/latest-cv
+                              │       (skipped if cv_data is supplied inline)
+                              │
+                              ├──► Firecrawl           scrape the job posting
+                              ├──► CrewAI job_scraper_agent   → structured job spec
+                              ├──► CrewAI job_matching_agent  → score + gaps
+                              │
+                              └──► ai-resume-enhancer  POST /api/resume/recommendations
 
-## 🛠️ Tech Stack
+Frontend polls  GET /api/v1/jobs/match/{request_id}  until status = completed | failed
+```
 
-### Frontend
-- **Framework**: Next.js 14 (React 18)
-- **Authentication**: NextAuth.js (Keycloak Provider + Credentials Provider)
-- **HTTP Client**: Axios
-- **Styling**: Tailwind CSS (recommended for future)
-- **Language**: TypeScript
+Job match requests are processed as FastAPI background tasks and tracked **in memory** — results do not survive a service restart.
 
-### Backend - User Service
-- **Framework**: Spring Boot 3.2
-- **Language**: Java 17
-- **Security**: Spring Security, JWT, Keycloak Admin Client
-- **Database**: PostgreSQL 15
-- **ORM**: Hibernate/JPA
-- **Build Tool**: Maven
+## Services and ports
 
-### Backend - API Gateway
-- **Framework**: Spring Cloud Gateway 4.1.0
-- **Rate Limiting**: Redis (Lettuce driver)
-- **Circuit Breaker**: Resilience4j
-- **Monitoring**: Spring Boot Actuator
+| Service | Container | Host port | Notes |
+|---|---|---|---|
+| Frontend (Next.js) | — | 3000 | Run with `npm run dev`, not in Compose |
+| API Gateway | `ms_gateway` | 8090 | Spring Cloud Gateway |
+| User service | `ms_user_service` | 8081 | Spring Boot 3.5, Java 17 |
+| AI Resume Enhancer | `ms_ai_resume_enhancer` | 8083 | container listens on 8080 |
+| Job Matcher | `ms_job_matcher` | 8010 | container listens on 8000 |
+| Keycloak | `keycloak-ms1` | 8080 | realm `Tsyp13CS`, admin `admin`/`admin` |
+| PostgreSQL | `ms_sql` | 5432 | `postgres`/`postgres`, DBs `user_db` + `keycloak` |
+| MongoDB | `mongo_db1` | 27017 | `mongo`/`mongo` |
+| Redis | `ms-redis` | 6379 | rate limiting + enhancement quotas |
+| PgAdmin | `ms_pgadmin1` | 5050 | |
+| Mongo Express | `mongo_express1` | 8082 | |
 
-### Future Services (Resume & Jobs)
-- **Framework**: FastAPI (Python 3.11+)
-- **AI Integration**: Groq API (Llama 3.1)
-- **Agent Framework**: CrewAI (optional)
-- **Database**: MongoDB 7.0
+`Services/config-server` (Spring Cloud Config, port 8888) exists in the repo but is **not** part of `docker-compose.yml` — services read their configuration from environment variables instead.
 
-### Infrastructure
-- **Containerization**: Docker, Docker Compose
-- **Identity Management**: Keycloak 24.0.2
-- **Caching**: Redis 7 Alpine
-- **Databases**: PostgreSQL 15 Alpine, MongoDB 7 (planned)
-- **Admin Tools**: PgAdmin 4, Mongo Express (planned)
+## Tech stack
 
----
+**Frontend** — Next.js 14 (Pages Router), React 18, TypeScript, Tailwind CSS, NextAuth.js (Keycloak + credentials providers), Axios, react-pdf.
 
-## ✨ Features Implemented
+**User service** — Spring Boot 3.5.6, Java 17, Spring Security + OAuth2 resource server, Keycloak Admin Client 23, Spring Data JPA, PostgreSQL 15.
 
-### ✅ User Authentication & Authorization
-- Custom sign-up/sign-in forms (Frontend → Backend → Keycloak)
-- JWT-based authentication with Keycloak
-- OAuth2 integration (Google sign-in ready)
-- Session management with NextAuth.js
-- Email verification (SMTP configurable)
-- Secure password hashing (bcrypt)
+**Gateway** — Spring Boot 3.5.7, Spring Cloud 2025.0.0, Spring Cloud Gateway, Resilience4j, Redis rate limiter, Actuator.
 
-### ✅ API Gateway
-- Request routing to microservices
-- **Rate Limiting**:
-  - Auth endpoints: 5 req/sec, burst capacity 10
-  - User management: 10 req/sec, burst capacity 20
-  - IP-based rate limiting with Redis
-- **Circuit Breaker**: Automatic fallback for failed services
-- **CORS**: Configured for localhost:3000
-- Health checks and monitoring
+**AI Resume Enhancer** — Python 3.11, FastAPI, PyMuPDF, Motor (MongoDB), Redis, Groq API, structlog, Prometheus client, optional Pinecone and CrewAI.
 
-### ✅ User Service
-- User CRUD operations
-- Keycloak user synchronization
-- **Compensation Pattern**: Automatic rollback for failed registrations
-- **Cleanup Service**: Scheduled orphaned user cleanup
-- Admin endpoints for data consistency checks
-- Audit logging for all actions
-- GDPR-ready (data export/delete endpoints ready)
+**Job Matcher** — Python 3.12, FastAPI, CrewAI 1.4.1 (Flow + Crew), Firecrawl scraping tool, Groq (`groq/llama-3.3-70b-versatile`), httpx.
 
-### ✅ Data Consistency
-- Automatic Keycloak user cleanup on database failure
-- Transaction management with compensation
-- Scheduled consistency verification
-- Manual admin cleanup tools
+**Infrastructure** — Docker Compose, Keycloak 24.0.2, PostgreSQL 15 Alpine, MongoDB, Redis 7 Alpine.
 
-### ✅ Security
-- JWT token validation at Gateway level
-- Keycloak integration for identity management
-- CORS protection
-- Rate limiting to prevent abuse
-- Audit logging for compliance
-- Secure Docker networking
+## Prerequisites
 
----
+- Docker Desktop 4.20+ with Compose 2.20+
+- Node.js 18+ and npm 9+ (for the frontend)
+- Java 17+ and Maven 3.9+ (only to run the Spring services outside Docker)
+- Python 3.11+ (only to run the FastAPI services outside Docker)
+- A [Groq API key](https://console.groq.com/) and a [Firecrawl API key](https://firecrawl.dev/) — the AI features do not work without them
 
-## 📦 Prerequisites
+## Quick start
 
-Before you begin, ensure you have the following installed:
-
-- **Docker Desktop** 4.20+ ([Download](https://www.docker.com/products/docker-desktop/))
-- **Docker Compose** 2.20+ (included with Docker Desktop)
-- **Git** 2.40+ ([Download](https://git-scm.com/downloads))
-- **Node.js** 18+ and **npm** 9+ ([Download](https://nodejs.org/))
-- **Java JDK** 17+ ([Download](https://adoptium.net/))
-- **Maven** 3.9+ ([Download](https://maven.apache.org/download.cgi))
-
-### Verify Installation
+### 1. Clone
 
 ```bash
-# Check Docker
-docker --version          # Should show 20.10+
-docker-compose --version  # Should show 2.20+
-
-# Check Node.js
-node --version            # Should show v18+
-npm --version             # Should show 9+
-
-# Check Java
-java -version             # Should show 17+
-mvn -version              # Should show 3.9+
+git clone https://github.com/Amine-Fathallah0/HireAI.git
+cd HireAI
 ```
 
----
+### 2. Create the root `.env`
 
-## 🚀 Quick Start
-
-### 1️⃣ Clone the Repository
+`docker-compose.yml` reads API keys from a root `.env` file. It is gitignored — create it yourself:
 
 ```bash
-git clone https://github.com/your-org/career-platform.git
-cd career-platform
+printf 'GROQ_API_KEY=your-groq-key\nFIRECRAWL_API_KEY=your-firecrawl-key\nPINECONE_API_KEY=\nPINECONE_ENV=\n' > .env
 ```
 
-### 2️⃣ Start Backend Services (Docker Compose)
+`docker-compose.yml` itself is also gitignored (see [Known gaps](#known-gaps)).
+
+### 3. Start the backend
 
 ```bash
-# Start all backend services
-docker-compose up -d
-
-# Verify all containers are running
-docker ps
-
-# Expected containers:
-# - keycloak-ms1 (Port 8080)
-# - ms_gateway (Port 8090)
-# - ms_user_service (Port 8081)
-# - ms_sql (PostgreSQL - Port 5432)
-# - ms-redis (Port 6379)
-# - ms_pgadmin1 (Port 5050)
-```
-
-### 3️⃣ Configure Keycloak
-
-```bash
-# Access Keycloak Admin Console
-# URL: http://localhost:8080/admin
-# Username: admin
-# Password: admin
-```
-
-**Steps:**
-1. Create or select the `resume-platform` realm
-2. Go to **Clients** → `user-service`
-3. Copy the **Client Secret** from the **Credentials** tab
-4. Enable **User Registration**:
-   - Go to **Realm Settings** → **Login**
-   - Enable "User registration"
-   - Save
-
-### 4️⃣ Configure Frontend Environment
-
-```bash
-cd frontend
-
-# Create .env.local file
-cat > .env.local << EOF
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-nextauth-secret-here-generate-with-openssl
-
-# Keycloak Configuration
-KEYCLOAK_CLIENT_ID=user-service
-KEYCLOAK_CLIENT_SECRET=<paste-from-keycloak>
-KEYCLOAK_ISSUER=http://localhost:8080/realms/resume-platform
-
-# Public Variables (accessible in browser)
-NEXT_PUBLIC_KEYCLOAK_ISSUER=http://localhost:8080/realms/resume-platform
-NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=user-service
-NEXT_PUBLIC_API_URL=http://localhost:8090
-EOF
-
-# Generate NextAuth secret
-openssl rand -base64 32
-```
-
-### 5️⃣ Start Frontend
-
-```bash
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-
-# Access at http://localhost:3000
-```
-
-### 6️⃣ Verify Setup
-
-```bash
-# Test User Service
-curl http://localhost:8081/actuator/health
-# Expected: {"status":"UP"}
-
-# Test Gateway
-curl http://localhost:8090/actuator/health
-# Expected: {"status":"UP"}
-
-# Test Rate Limiting
-curl -X POST http://localhost:8090/api/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"Test123!","firstName":"Test","lastName":"User","consentAiProcessing":true}'
-
-# Check rate limit headers in response
-```
-
----
-
-## 🔧 Development Setup
-
-### Backend Development (User Service)
-
-```bash
-cd Services/user
-
-# Run locally (without Docker)
-mvn spring-boot:run
-
-# Run tests
-mvn test
-
-# Build
-mvn clean package
-
-# Access at http://localhost:8081
-```
-
-### Gateway Development
-
-```bash
-cd Services/gateway
-
-# Run locally
-mvn spring-boot:run
-
-# Access at http://localhost:8090
-```
-
-### Frontend Development
-
-```bash
-cd frontend
-
-# Run dev server with hot reload
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-
-# Type checking
-npm run type-check
-```
-
----
-
-## 🧪 Testing
-
-### Test Rate Limiting
-
-```powershell
-# PowerShell script to test rate limiting
-Write-Host "🧪 Testing Rate Limiting Headers"
-
-for ($i = 1; $i -le 5; $i++) {
-    $email = "ratetest$i@example.com"
-    $response = Invoke-WebRequest -Uri "http://localhost:8090/api/v1/auth/register" `
-        -Method POST `
-        -ContentType "application/json" `
-        -Body "{`"email`": `"$email`", `"password`": `"Test123!`", `"firstName`": `"Rate`", `"lastName`": `"Test`", `"consentAiProcessing`": true}" `
-        -UseBasicParsing
-    
-    Write-Host "Request $i`: Status $($response.StatusCode)"
-    Write-Host "  - X-RateLimit-Remaining: $($response.Headers.'X-RateLimit-Remaining')"
-    Write-Host "  - X-RateLimit-Burst-Capacity: $($response.Headers.'X-RateLimit-Burst-Capacity')"
-    Write-Host ""
-}
-```
-
-### Test Burst Capacity (25 requests to hit rate limit)
-
-```powershell
-Write-Host "🧪 Testing Burst Capacity (25 requests)"
-
-for ($i = 1; $i -le 25; $i++) {
-    try {
-        $response = Invoke-WebRequest -Uri "http://localhost:8090/api/v1/users/profile" `
-            -Headers @{'Authorization' = 'Bearer invalid-token'} `
-            -UseBasicParsing
-        Write-Host "Request $i`: Status $($response.StatusCode)"
-    } catch {
-        $statusCode = $_.Exception.Response.StatusCode.value__
-        if ($statusCode -eq 429) {
-            Write-Host "Request $i`: Status 429 - Rate Limited! ✓"
-        } else {
-            Write-Host "Request $i`: Status $statusCode"
-        }
-    }
-}
-```
-
-### Monitor Redis Rate Limiting
-
-```bash
-# Monitor Redis commands in real-time
-docker exec -it ms-redis redis-cli MONITOR
-
-# Check rate limiting keys
-docker exec ms-redis redis-cli KEYS "*rate*"
-
-# Check specific key
-docker exec ms-redis redis-cli GET "request_rate_limiter.{user-auth-route.172.23.0.1}.tokens"
-```
-
-### Test User Registration Flow
-
-```bash
-# 1. Register a new user
-curl -X POST http://localhost:8090/api/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "newuser@example.com",
-    "password": "SecurePass123!",
-    "firstName": "John",
-    "lastName": "Doe",
-    "consentAiProcessing": true
-  }'
-
-# Expected: HTTP 201 Created with user details
-
-# 2. Verify user in Keycloak
-# Go to http://localhost:8080/admin → Users → Search "newuser@example.com"
-
-# 3. Verify user in PostgreSQL
-docker exec -it ms_sql psql -U resume_user -d resume_db -c "SELECT * FROM users WHERE email='newuser@example.com';"
-
-# 4. Sign in on frontend
-# Go to http://localhost:3000/auth/signin
-# Use email: newuser@example.com, password: SecurePass123!
-```
-
----
-
-## 📚 API Documentation
-
-### User Service Endpoints
-
-#### Authentication
-
-```bash
-# Register new user
-POST /api/v1/auth/register
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "SecurePass123!",
-  "firstName": "John",
-  "lastName": "Doe",
-  "phoneNumber": "+1234567890",
-  "city": "New York",
-  "country": "USA",
-  "consentAiProcessing": true
-}
-
-# Response: 201 Created
-{
-  "userId": 1,
-  "email": "user@example.com",
-  "firstName": "John",
-  "lastName": "Doe",
-  "role": "user"
-}
-```
-
-#### User Management
-
-```bash
-# Get current user profile (requires authentication)
-GET /api/v1/users/profile
-Authorization: Bearer <jwt-token>
-
-# Response: 200 OK
-{
-  "id": 1,
-  "keycloakId": "uuid-here",
-  "email": "user@example.com",
-  "firstName": "John",
-  "lastName": "Doe",
-  "emailVerified": false,
-  "role": "user"
-}
-```
-
-#### Admin Endpoints
-
-```bash
-# Check data consistency (Admin only)
-GET /api/v1/admin/consistency/check
-Authorization: Bearer <admin-jwt-token>
-
-# Cleanup orphaned users (Admin only)
-POST /api/v1/admin/cleanup/orphaned?keycloakId=<uuid>
-Authorization: Bearer <admin-jwt-token>
-
-# System health check (Admin only)
-GET /api/v1/admin/health
-Authorization: Bearer <admin-jwt-token>
-```
-
-### Gateway Endpoints
-
-```bash
-# Gateway health check
-GET /actuator/health
-
-# Gateway metrics
-GET /actuator/metrics
-
-# Circuit breaker status
-GET /actuator/circuitbreakers
-```
-
-### Rate Limiting Configuration
-
-| Route | Replenish Rate | Burst Capacity | Scope |
-|-------|----------------|----------------|-------|
-| `/api/v1/auth/**` | 5 req/sec | 10 | Per IP |
-| `/api/v1/users/**` | 10 req/sec | 20 | Per IP |
-| `/api/v1/admin/**` | 2 req/sec | 5 | Per IP |
-
----
-
-## 🐳 Docker Commands
-
-### Container Management
-
-```bash
-# Start all services
-docker-compose up -d
-
-# Stop all services
-docker-compose down
-
-# Restart specific service
-docker-compose restart user-service
-
-# View logs
-docker-compose logs -f user-service
-docker-compose logs -f gateway
-
-# Rebuild and start
 docker-compose up -d --build
-
-# Remove volumes (reset databases)
-docker-compose down -v
+docker ps
 ```
 
-### Database Access
+Keycloak takes a minute or two to become healthy on first boot; the gateway and user service wait on its healthcheck.
+
+### 4. Configure Keycloak
+
+Open http://localhost:8080/admin and log in with `admin` / `admin`.
+
+1. Create the realm **`Tsyp13CS`** if it does not exist.
+2. Create a confidential client `user-service` with **Direct access grants** and **Service accounts** enabled.
+3. Under **Service account roles**, assign the `realm-management` roles `manage-users`, `view-users`, and `query-users` — the user service needs them to provision accounts.
+4. Copy the client secret from the **Credentials** tab.
+5. Under **Realm settings → Login**, enable **User registration**.
+
+Then set `KEYCLOAK_CLIENT_SECRET` in `docker-compose.yml` (user service) and in `frontend/.env.local`, and restart the affected containers.
+
+### 5. Configure and start the frontend
 
 ```bash
-# PostgreSQL CLI
-docker exec -it ms_sql psql -U resume_user -d resume_db
-
-# PgAdmin Web UI
-# URL: http://localhost:5050
-# Email: admin@admin.com
-# Password: admin
-
-# Redis CLI
-docker exec -it ms-redis redis-cli
-
-# MongoDB CLI (when implemented)
-docker exec -it ms_mongo mongosh
+cd frontend
+cp .env.local.example .env.local
+# edit .env.local — see the table below
+npm install
+npm run dev
 ```
 
----
+Generate a NextAuth secret with `openssl rand -base64 32`.
 
-## 🌍 Environment Variables
+The app is at http://localhost:3000.
 
-### Frontend (`.env.local`)
+### 6. Verify
 
 ```bash
-# NextAuth Configuration
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=<generate-with-openssl-rand-base64-32>
-
-# Keycloak
-KEYCLOAK_CLIENT_ID=user-service
-KEYCLOAK_CLIENT_SECRET=<from-keycloak-admin>
-KEYCLOAK_ISSUER=http://localhost:8080/realms/resume-platform
-
-# Public (accessible in browser)
-NEXT_PUBLIC_KEYCLOAK_ISSUER=http://localhost:8080/realms/resume-platform
-NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=user-service
-NEXT_PUBLIC_API_URL=http://localhost:8090
+curl http://localhost:8090/actuator/health   # gateway  -> {"status":"UP"}
+curl http://localhost:8081/actuator/health   # user     -> {"status":"UP"}
+curl http://localhost:8083/healthz           # resume   -> {"status":"ok"}
+curl http://localhost:8010/health            # jobs     -> dependency report
 ```
 
-### Backend (Docker Compose)
+Interactive API docs: http://localhost:8010/api/v1/jobs/docs (job matcher) and http://localhost:8083/docs (resume enhancer).
 
-```yaml
-# Gateway Service
-SPRING_PROFILES_ACTIVE: dev
-USER_SERVICE_URL: http://user-service:8081
-REDIS_HOST: redis
-REDIS_PORT: 6379
-KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/resume-platform
+## Environment variables
 
-# User Service
-SPRING_PROFILES_ACTIVE: dev
-KEYCLOAK_SERVER_URL: http://keycloak:8080
-KEYCLOAK_REALM: resume-platform
-KEYCLOAK_ADMIN_USERNAME: admin
-KEYCLOAK_ADMIN_PASSWORD: admin
-DATABASE_URL: jdbc:postgresql://postgresql:5432/resume_db
-DATABASE_USERNAME: resume_user
-DATABASE_PASSWORD: resume_password
-```
+### Frontend — `frontend/.env.local`
 
----
+| Variable | Example | Purpose |
+|---|---|---|
+| `NEXTAUTH_URL` | `http://localhost:3000` | NextAuth callback base |
+| `NEXTAUTH_SECRET` | 32+ random chars | Session encryption |
+| `KEYCLOAK_CLIENT_ID` | `user-service` | Server-side OIDC client |
+| `KEYCLOAK_CLIENT_SECRET` | from Keycloak | Server-side OIDC secret |
+| `KEYCLOAK_ISSUER` | `http://localhost:8080/realms/Tsyp13CS` | Server-side issuer |
+| `NEXT_PUBLIC_KEYCLOAK_ISSUER` | same as above | Browser-side issuer |
+| `NEXT_PUBLIC_KEYCLOAK_CLIENT_ID` | `user-service` | Browser-side client id |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8090` | Gateway base URL |
+| `NEXT_PUBLIC_RESUME_SERVICE_URL` | `http://localhost:8083` | Resume service, called directly |
+| `NEXT_PUBLIC_AI_RESUME_ENHANCER_API_URL` | `http://localhost:8083` | Used by `pages/resume/upload_new.tsx` |
+| `NEXT_PUBLIC_JOB_MATCHER_URL` | `http://localhost:8010` | Job matcher, called directly |
 
-## 🚢 Deployment
+The resume and job-matcher pages call those services directly rather than through the gateway, so the last three must be set for those flows to work.
 
-### Production Checklist
+### Root `.env` — consumed by Docker Compose
 
-- [ ] Generate secure secrets (JWT, database passwords)
-- [ ] Configure HTTPS/TLS certificates
-- [ ] Set up external database (Azure PostgreSQL, MongoDB Atlas)
-- [ ] Configure Redis cluster for high availability
-- [ ] Set up monitoring (Prometheus, Grafana)
-- [ ] Configure logging aggregation (ELK Stack)
-- [ ] Set up CI/CD pipeline (GitHub Actions)
-- [ ] Configure Keycloak with production realm
-- [ ] Set up email SMTP for verification
-- [ ] Configure CORS for production domain
-- [ ] Set up rate limiting based on production load
-- [ ] Enable audit logging for compliance
-- [ ] Configure backup and disaster recovery
+| Variable | Required | Purpose |
+|---|---|---|
+| `GROQ_API_KEY` | yes | LLM calls in both Python services |
+| `FIRECRAWL_API_KEY` | yes | Job posting scraping |
+| `PINECONE_API_KEY` | no | Optional vector storage for resume sections |
+| `PINECONE_ENV` | no | Pinecone environment |
 
-### Azure Deployment (Planned)
+### Service-level variables
+
+Set in `docker-compose.yml`; override there or in a per-service `.env` when running outside Docker.
+
+**User service** — `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `KEYCLOAK_SERVER_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`, `KEYCLOAK_ADMIN_USERNAME`, `KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_ISSUER_URI`, `KEYCLOAK_JWK_SET_URI`.
+
+**Gateway** — `REDIS_HOST`, `REDIS_PORT`, `USER_SERVICE_URL`, `JOB_MATCHER_SERVICE_URL`, `AI_RESUME_SERVICE_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_ISSUER_URI`, `SERVER_PORT`.
+
+**AI Resume Enhancer** — `MONGO_URL`, `MONGO_DB_NAME`, `REDIS_URL`, `GROQ_API_KEY`, `GROQ_API_URL`, `PINECONE_*`, `ENABLE_CREWAI`, `FASTAPI_HOST`, `FASTAPI_PORT`, `DEBUG`. See `Services/ai-resume-enhancer/.env.example`.
+
+**Job Matcher** — `MODEL`, `GROQ_API_KEY`, `FIRECRAWL_API_KEY`, `RESUME_SERVICE_URL`, `RESUME_SERVICE_ENABLED`, `MONGODB_URI`, `MONGODB_DATABASE`, `ENVIRONMENT`.
+
+## Running services individually
 
 ```bash
-# Azure Container Apps deployment (example)
-az containerapp up \
-  --name career-platform-gateway \
-  --resource-group career-platform-rg \
-  --location eastus \
-  --image your-registry.azurecr.io/gateway:latest \
-  --target-port 8090 \
-  --ingress external \
-  --query properties.configuration.ingress.fqdn
+# User service
+cd Services/user && ./mvnw spring-boot:run        # :8081
+
+# Gateway
+cd Services/gateway && ./mvnw spring-boot:run     # :8090
+
+# AI Resume Enhancer
+cd Services/ai-resume-enhancer
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8083
+
+# Job Matcher
+cd Services/JobsService/job_matcher
+pip install -e .                                  # or: uv sync
+uvicorn job_matcher.api:app --reload --port 8010
+
+# Frontend
+cd frontend && npm run dev                        # :3000
 ```
 
----
+Running a service outside Docker still needs PostgreSQL, MongoDB, Redis, and Keycloak — start those with `docker-compose up -d postgresql mongodb redis keycloak` and point the service's URLs at `localhost`.
 
-## 👥 Contributing
-
-### For Team Members
-
-1. **Clone and Setup**
-   ```bash
-   git clone https://github.com/your-org/career-platform.git
-   cd career-platform
-   docker-compose up -d
-   cd frontend && npm install && npm run dev
-   ```
-
-2. **Create Feature Branch**
-   ```bash
-   git checkout -b feature/resume-service
-   ```
-
-3. **Development Workflow**
-   - Make your changes
-   - Test locally
-   - Commit with descriptive messages
-   - Push and create Pull Request
-
-4. **Coding Standards**
-   - Follow existing code style
-   - Write unit tests for new features
-   - Update documentation
-   - Run linters before committing
-
-### Branch Strategy
-
-- `main` - Production-ready code
-- `develop` - Integration branch
-- `feature/*` - New features
-- `bugfix/*` - Bug fixes
-- `hotfix/*` - Production hotfixes
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### 1. Port Already in Use
+### Tests
 
 ```bash
-# Windows (PowerShell)
+cd Services/user    && ./mvnw test    # context-load test only
+cd Services/gateway && ./mvnw test    # context-load test only
+```
+
+The Python services ship ad-hoc scripts rather than a suite: `Services/ai-resume-enhancer/test_enhancement_api.py`, `test_complete_api.ps1`, and `test_daily_limit.ps1`. There is no automated test coverage beyond these.
+
+## API reference
+
+All gateway-routed paths are prefixed with `http://localhost:8090`.
+
+### Auth — `/api/v1/auth` (user service)
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/register` | Create a user in Keycloak and PostgreSQL |
+| POST | `/login` | Exchange credentials for tokens |
+| POST | `/refresh` | Refresh an access token |
+| POST | `/logout` | Invalidate the session |
+| GET | `/me` | Current authenticated user |
+
+```bash
+curl -X POST http://localhost:8090/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"SecurePass123!","firstName":"John","lastName":"Doe","consentAiProcessing":true}'
+```
+
+Registration uses a **compensation pattern**: if the PostgreSQL insert fails after the Keycloak user is created, the Keycloak user is deleted so the two stores stay consistent.
+
+### Users — `/api/v1/users` (user service, authenticated)
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/profile` | Current user's profile |
+| PUT | `/profile` | Update profile |
+| DELETE | `/profile` | Delete own account (GDPR) |
+| GET | `/profile/export` | Export own data (GDPR) |
+| PUT | `/profile/consent` | Update AI processing consent |
+| GET | `/` | List users (admin) |
+| GET | `/{userId}` | Fetch a user (admin) |
+| DELETE | `/{userId}` | Delete a user (admin) |
+| PUT | `/{userId}/activate` | Activate a user (admin) |
+| PUT | `/{userId}/deactivate` | Deactivate a user (admin) |
+
+### Admin — `/api/v1/admin` (user service, admin role)
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/cleanup/orphaned` | Remove Keycloak users with no DB row |
+| GET | `/consistency/check` | Compare Keycloak and PostgreSQL |
+| GET | `/health` | Service health detail |
+
+A scheduled `UserCleanupService` also runs this reconciliation automatically.
+
+### Resume — AI Resume Enhancer (`http://localhost:8083`)
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/resume/upload` | Upload a PDF; `?enhance=true` to enhance inline. `X-User-Id` header identifies the user |
+| POST | `/api/resume/{resume_id}/enhance` | Enhance a stored resume |
+| POST | `/api/resumes/{resume_id}/enhance` | Section-level enhancement |
+| GET | `/api/resume/{resume_id}` | Fetch a parsed resume |
+| GET | `/api/resume/{resume_id}/latest` | Latest version |
+| GET | `/api/resume/{resume_id}/versions` | Version history |
+| GET | `/api/resume/{resume_id}/cv-data` | Job-matcher-compatible CV payload |
+| GET | `/api/resume/user/{user_id}/latest-cv` | Latest CV for a user (`?use_enhanced=true`) |
+| POST | `/api/resume/recommendations` | Store job-specific recommendations |
+| GET | `/api/resume/recommendations/{id}` | Fetch one recommendation set |
+| GET | `/api/resume/recommendations/user/{user_id}` | All recommendations for a user |
+| GET | `/api/resume/recommendations/resume/{resume_id}` | All for a resume |
+| POST | `/api/resume/recommendations/{id}/apply` | Apply recommendations to a resume |
+| DELETE | `/api/resume/recommendations/{id}` | Delete a recommendation set |
+| GET | `/api/user/tier` | Subscription tier |
+| GET | `/api/user/usage` | Remaining enhancement quota |
+| GET | `/healthz` | Health check |
+| GET | `/metrics` | Prometheus metrics |
+
+### Jobs — Job Matcher (`/api/v1/jobs`, or `http://localhost:8010` directly)
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/v1/jobs/match` | Start a match. Returns `202` with a `request_id` |
+| GET | `/api/v1/jobs/match/{request_id}` | Poll status and result |
+| GET | `/api/v1/jobs/match` | List requests (`?user_id=&limit=`) |
+| DELETE | `/api/v1/jobs/match/{request_id}` | Delete a request |
+| GET | `/api/v1/jobs/config` | Effective configuration (debug) |
+| GET | `/health` | Health plus dependency status |
+
+```bash
+# Start a match — CV is fetched from the resume service
+curl -X POST http://localhost:8090/api/v1/jobs/match \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":"user_123","job_url":"https://example.com/jobs/123"}'
+
+# Poll
+curl http://localhost:8090/api/v1/jobs/match/<request_id>
+```
+
+Pass `cv_data` inline in the request body to skip the resume-service lookup entirely.
+
+## Rate limiting
+
+Two independent layers.
+
+**Gateway** — Redis token bucket, per route (`Services/gateway/src/main/resources/application.yml`):
+
+| Route | Replenish rate | Burst capacity |
+|---|---|---|
+| `/api/v1/auth/**` | 5 req/sec | 10 |
+| `/api/v1/users/**` | 10 req/sec | 20 |
+| `/api/v1/profile/**` | 20 req/sec | 40 |
+| `/api/v1/jobs/**` | 5 req/sec | 10 |
+| `/api/v1/resumes/**` | 3 req/sec | 5 |
+| `/actuator/**` | 50 req/sec | 100 |
+
+Circuit breakers (Resilience4j) wrap the auth, user, jobs, and resume routes with a 50% failure threshold; the two AI routes wait 30s before probing again instead of the default 10s. Trips forward to `/fallback/*`.
+
+**Resume service** — per-user monthly enhancement quotas by tier, plus a daily cap, tracked in Redis (`Services/ai-resume-enhancer/app/middleware/rate_limiter.py`):
+
+| Tier | Enhancements / month |
+|---|---|
+| free | 3 |
+| basic | 10 |
+| premium | 50 |
+| enterprise | unlimited |
+
+Daily cap: 10 section-level enhancements. If Redis is unreachable, quota enforcement is silently skipped.
+
+Inspect the gateway's buckets:
+
+```bash
+docker exec ms-redis redis-cli KEYS "*rate*"
+docker exec -it ms-redis redis-cli MONITOR
+```
+
+## Repository layout
+
+```
+.
+├── docker-compose.yml              # full stack (gitignored — see Known gaps)
+├── init-scripts/
+│   └── 01-init-databases.sql       # creates user_db and keycloak databases
+├── Services/
+│   ├── gateway/                    # Spring Cloud Gateway
+│   ├── user/                       # Spring Boot user service
+│   ├── config-server/              # Spring Cloud Config (not wired into Compose)
+│   ├── ai-resume-enhancer/         # FastAPI resume parsing + enhancement
+│   │   ├── app/api/                # upload, enhance, cv_data, job_recommendations, user
+│   │   ├── app/services/           # groq_client, ats_scoring, embeddings, crew_agents
+│   │   └── app/middleware/         # rate_limiter, request_id
+│   └── JobsService/job_matcher/    # FastAPI + CrewAI job matching
+│       └── src/job_matcher/
+│           ├── api.py              # FastAPI surface
+│           ├── main.py             # JobMatcherFlow (CrewAI Flow)
+│           └── crews/Job_Matcher/  # agents.yaml, tasks.yaml, crew definition
+├── frontend/                       # Next.js 14 app
+│   ├── pages/                      # index, auth/signin, dashboard, job-matcher, resume/*
+│   ├── components/                 # dashboard, job-matcher, resume, ui
+│   └── lib/hooks/                  # useProfile, useResumes, useDarkMode
+└── docs/
+```
+
+### Further reading
+
+- [`JOB_MATCHER_SETUP.md`](JOB_MATCHER_SETUP.md) — job matcher integration walkthrough
+- [`frontend/SETUP_GUIDE.md`](frontend/SETUP_GUIDE.md) — Keycloak and Google OAuth2 setup
+- [`Services/ai-resume-enhancer/API_REFERENCE.md`](Services/ai-resume-enhancer/API_REFERENCE.md) — detailed resume API
+- [`Services/JobsService/job_matcher/INTEGRATION_GUIDE.md`](Services/JobsService/job_matcher/INTEGRATION_GUIDE.md) — resume ↔ job matcher contract
+
+## Troubleshooting
+
+**Keycloak never becomes healthy.** It boots against PostgreSQL and can take 2–3 minutes on first run. Check with `docker logs keycloak-ms1 --tail 50`. If PostgreSQL is not healthy, the `keycloak` database from `init-scripts/` was not created — `docker-compose down -v` and start again.
+
+**Gateway returns 503.** A circuit breaker is open or a downstream service is down. Check `curl http://localhost:8090/actuator/health` and `docker logs ms_gateway --tail 50`.
+
+**Rate limiting not applied.** `docker exec ms-redis redis-cli ping` should return `PONG`. Without Redis the gateway's limiter cannot operate.
+
+**Job match stuck on `processing`.** Check `docker logs ms_job_matcher -f`. Most failures are a missing or exhausted `FIRECRAWL_API_KEY`, or a job URL Firecrawl cannot reach. `GET /api/v1/jobs/config` reports which keys the service actually sees.
+
+**Job match returns 503 "Resume service not available".** Either `RESUME_SERVICE_ENABLED` is false, or the user has no uploaded resume. Upload one first, or pass `cv_data` inline.
+
+**Frontend cannot reach a service.** The resume and job-matcher pages bypass the gateway — confirm `NEXT_PUBLIC_RESUME_SERVICE_URL` and `NEXT_PUBLIC_JOB_MATCHER_URL` are set in `.env.local`, and restart `npm run dev` after editing it.
+
+**Port already in use.**
+
+```powershell
 Get-Process -Id (Get-NetTCPConnection -LocalPort 8080).OwningProcess | Stop-Process -Force
+```
 
-# Linux/Mac
+```bash
 lsof -ti:8080 | xargs kill -9
 ```
 
-#### 2. Docker Container Won't Start
+**Reset everything.**
 
 ```bash
-# Check logs
-docker logs ms_user_service
-docker logs ms_gateway
-
-# Recreate containers
-docker-compose down -v
-docker-compose up -d --build
+docker-compose down -v && docker-compose up -d --build
 ```
 
-#### 3. Frontend Can't Connect to Backend
+## Known gaps
 
-```bash
-# Verify API URL in .env.local
-echo $NEXT_PUBLIC_API_URL  # Should be http://localhost:8090
+Current state of the project, stated plainly:
 
-# Test gateway directly
-curl http://localhost:8090/actuator/health
-
-# Restart frontend dev server
-npm run dev
-```
-
-#### 4. Rate Limiting Not Working
-
-```bash
-# Check Redis connection
-docker exec ms-redis redis-cli ping
-# Expected: PONG
-
-# Monitor Redis commands
-docker exec -it ms-redis redis-cli MONITOR
-
-# Check Gateway logs
-docker logs ms_gateway --tail 50 | grep -i "rate"
-```
-
-#### 5. Keycloak Authentication Fails
-
-```bash
-# Verify Keycloak is running
-curl http://localhost:8080/health
-# Expected: {"status":"UP"}
-
-# Check client secret in .env.local matches Keycloak
-# Go to Keycloak Admin → Clients → user-service → Credentials
-
-# Verify issuer URL
-# Should be: http://localhost:8080/realms/resume-platform
-```
-
-#### 6. Database Connection Issues
-
-```bash
-# Test PostgreSQL connection
-docker exec ms_sql psql -U resume_user -d resume_db -c "SELECT 1;"
-
-# Check user service logs
-docker logs ms_user_service | grep -i "database"
-
-# Verify environment variables
-docker exec ms_user_service printenv | grep DATABASE
-```
-
----
-
-## 📖 Additional Resources
-
-- [Spring Cloud Gateway Documentation](https://spring.io/projects/spring-cloud-gateway)
-- [NextAuth.js Documentation](https://next-auth.js.org/)
-- [Keycloak Documentation](https://www.keycloak.org/documentation)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Redis Rate Limiting](https://redis.io/docs/manual/patterns/rate-limiting/)
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- Spring Boot Team for excellent microservices framework
-- Keycloak for comprehensive identity management
-- Next.js Team for powerful React framework
-- Redis Team for blazing-fast caching
-
----
-
-## 📞 Contact
-
-For questions or support, please reach out to:
-
-- **Project Lead**: [Your Name](mailto:your.email@example.com)
-- **Issues**: [GitHub Issues](https://github.com/your-org/career-platform/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/career-platform/discussions)
-
----
-
-<div align="center">
-
-**Made with ❤️ by the Career Platform Team**
-
-⭐ Star us on GitHub — it helps!
-
-</div>
-
+- **`docker-compose.yml` is gitignored.** A fresh clone will not contain it, so the stack cannot be started from the repository alone. It needs to be committed, with secrets moved out to `.env`.
+- **A Keycloak client secret is hardcoded** in `docker-compose.yml` and in `frontend/.env.local.example`. Both should be rotated and read from the environment.
+- **Job match results are in-memory.** `job_match_results` in `Services/JobsService/job_matcher/src/job_matcher/api.py` is a plain dict — results are lost on restart, and the service cannot be scaled horizontally. `MONGODB_URI` is configured but unused for this.
+- **No LICENSE file**, despite the project being described as MIT elsewhere.
+- **Health endpoints disagree.** Compose healthchecks the resume service at `/health`, but `app/main.py` only exposes `/healthz`, so that container never reports healthy.
+- **`NEXT_PUBLIC_AI_RESUME_ENHANCER_API_URL` defaults to port 8082** in `frontend/pages/resume/upload_new.tsx`, which is Mongo Express. It should be 8083.
+- **Test coverage is effectively nil** — the Java modules have context-load tests only, and the Python services have manual scripts.
+- **CORS is `*`** on the job matcher, and the gateway's own security config is permissive. Both need tightening before any deployment.
+- **`Services/config-server` is unused** — either wire it into Compose or remove it.
